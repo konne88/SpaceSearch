@@ -23,8 +23,8 @@ will take a very long time to return an answer for any number higher than 3.
 ### Developing SpaceSearch
 
 You can also use Docker to start a SpaceSearch development environment that has
-all the right dependencies setup. 
-    
+all the right dependencies setup: 
+
     docker rm -f ss; docker run --name ss -v $(pwd):/ss -ti ss
 
 Running the above command starts a shell in the development environment. You can
@@ -32,7 +32,7 @@ build the SpaceSearch project with:
 
     make -C /ss example
 
-You can connect to the development environment with emacs.
+From another terminal, you can connect to the development environment with your local emacs installation:
 
     emacs /docker:ss:/ss/src/coq/SpaceSearch.v
 
@@ -42,4 +42,3 @@ If your docker instance runs on another machine, you can connect to it with:
 
 Make sure your emacs has `ProofGeneral` and `docker-tramp` installed, and 
 `enable-remote-dir-locals` must be set.
-

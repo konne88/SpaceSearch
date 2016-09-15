@@ -1,0 +1,12 @@
+.cabal-sandbox/
+compiled
+*.vo
+.*.aux
+*#
+*~
+*.scm
+*.glob 
+*.v.d 
+.coq-native
+queens.rkt
+**/Makefile

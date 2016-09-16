@@ -1,3 +1,6 @@
+
+![alt tag](https://raw.githubusercontent.com/konne88/SpaceSearch/master/logo/logo.png)
+
 ### Getting Started with SpaceSearch
 
 SpaceSearch is a Coq library that enables the verification of solver aided

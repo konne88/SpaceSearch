@@ -1,5 +1,5 @@
-
-![alt tag](https://raw.githubusercontent.com/konne88/SpaceSearch/master/logo/logo.png)
+<img src="https://raw.githubusercontent.com/konne88/SpaceSearch/master/logo/logo.png" width="25px"> Space Search
+================
 
 ### Getting Started with SpaceSearch
 

@@ -5,8 +5,8 @@ compiled
 *#
 *~
 *.scm
-*.glob 
-*.v.d 
+*.glob
+*.v.d
 .coq-native
 queens.rkt
 **/Makefile

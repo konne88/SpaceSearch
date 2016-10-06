@@ -39,8 +39,8 @@ Extract Constant rosetteMone  => "-1".
 Extract Constant rosetteZero  => "0".
 Extract Constant rosetteOne   => "1".
 Extract Constant rosettePlus  => "(lambdas (n m) (+ n m))".
-Extract Constant rosetteEqual => "(lambdas (n m) (= n m))".
-Extract Constant rosetteLe    => "(lambdas (n m) (<= n m))".
+Extract Constant rosetteEqual => "(lambdas (n m) (if (= n m) '(True) '(False)))".
+Extract Constant rosetteLe    => "(lambdas (n m) (if (<= n m) '(True) '(False)))".
 
 Parameter rosetteDenoteInt : RosetteInt -> Z.
 Extract Constant rosetteDenoteInt => "number->z".
@@ -76,7 +76,7 @@ Parameter fullInt : Space Int.
 Axiom denoteFullIntOk : ⟦ fullInt ⟧ = Full_set Int.
 
 Extract Constant fullInt => "(lambda (_) 
-  (define-symbolic n integer?)
+  (define-symbolic* n integer?)
   n)".
 
 Global Instance fullRosetteInteger : Full Int := {|

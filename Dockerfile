@@ -66,6 +66,13 @@ RUN git clone https://github.com/emina/rosette.git && \
     cd rosette; git checkout 2.2 && \
                 raco pkg install
 
+# enable rosette debugging
+RUN cd rosette && \
+#   sed -i "s/;(printf/(printf/g" rosette/base/core/effects.rkt && \
+#   sed -i "s/;(fprintf/(fprintf/g" rosette/solver/smt/smtlib2.rkt && \
+    raco pkg remove rosette && \
+    raco pkg install
+
 # build SpaceSearch and examples
 ADD . /ss
 RUN make -C /ss examples

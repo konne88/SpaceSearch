@@ -1,6 +1,7 @@
 Require Import SpaceSearch.
 Require Import Rosette.
 Require Import ListEx.
+Require Import ListSpaceSearch.
 Require Import Bool.
 Require Import Arith.EqNat.
 

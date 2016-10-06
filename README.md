@@ -33,7 +33,7 @@ all the right dependencies setup:
 Running the above command starts a shell in the development environment. You can
 build the SpaceSearch project with:
 
-    make -C /ss example
+    make -C /ss examples
 
 From another terminal, you can connect to the development environment with your local emacs installation:
 

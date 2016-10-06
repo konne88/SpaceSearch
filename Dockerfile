@@ -66,6 +66,6 @@ RUN git clone https://github.com/emina/rosette.git && \
     cd rosette; git checkout 2.2 && \
                 raco pkg install
 
-# build SpaceSearch and example
+# build SpaceSearch and examples
 ADD . /ss
-RUN make -C /ss example
+RUN make -C /ss examples

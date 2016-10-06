@@ -9,5 +9,5 @@ compiled
 *.v.d
 .coq-native
 queens.rkt
-integers.rkt
+integer-tests.rkt
 **/Makefile

@@ -13,6 +13,15 @@ Definition solveAddTrans : list (Int * Int * Int * Int * Int) :=
       let b := plus x (plus y z) in
         if equal a b then empty else single (x,y,z,a,b))))).
 
+Definition solveAddAddTrans : list (Int * Int * Int * Int * Int) :=
+  search (
+    bind full (fun x:Int =>
+    bind full (fun y:Int => 
+    bind full (fun z:Int => 
+      let a := plus (plus x (plus y y)) z in
+      let b := plus x (plus y z) in
+        if equal a b then empty else single (x,y,z,a,b))))).
+
 Extraction Language Scheme.
 
-Extraction "integers" solveAddTrans.
+Extraction "integer-tests" solveAddTrans solveAddAddTrans.

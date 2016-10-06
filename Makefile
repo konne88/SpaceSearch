@@ -20,14 +20,15 @@ examples: build
 	raco make queens.rkt
 	chmod +x queens.rkt
 	# integers
-	cp $(EXA_RKT)/header.rkt integers.rkt
-	tail -n +4 $(EXA_COQ)/integers.scm >> integers.rkt
-	raco make integers.rkt
-	chmod +x integers.rkt
+	cp $(EXA_RKT)/header.rkt integer-tests.rkt
+	tail -n +4 $(EXA_COQ)/integer-tests.scm >> integer-tests.rkt
+	cat $(EXA_RKT)/integer-tests.rkt >> integer-tests.rkt
+	raco make integer-tests.rkt
+	chmod +x integer-tests.rkt
 
 clean:
 	cd $(SRC_COQ); rm -rf Makefile *.glob *.v.d *.scm *.vo .coq-native .*.aux "#"*"#" ".#"*
 	cd $(EXA_COQ); rm -rf Makefile *.glob *.v.d *.scm *.vo .coq-native .*.aux "#"*"#" ".#"*
 	cd $(SRC_RKT); rm -rf compiled
-	rm -rf queens.rkt integers.rkt compiled
+	rm -rf queens.rkt integer-tests.rkt compiled
 

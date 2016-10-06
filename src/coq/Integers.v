@@ -43,7 +43,7 @@ Extract Constant rosetteEqual => "(lambdas (n m) (= n m))".
 Extract Constant rosetteLe    => "(lambdas (n m) (<= n m))".
 
 Parameter rosetteDenoteInt : RosetteInt -> Z.
-Extract Constant rosetteDenoteInt => "integer->z".
+Extract Constant rosetteDenoteInt => "number->z".
 
 Instance rosetteDenotationInt : Denotation _ _ := {| 
   denote := rosetteDenoteInt

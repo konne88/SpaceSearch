@@ -20,7 +20,7 @@ Lemma concatIn {A} {a:A} l {L} : In a l -> In l L -> In a (concat L).
   + contradiction.
   + simpl.
     apply in_or_app.
-    cbn in *.
+    simpl in *.
     intuition.
     subst.
     intuition.
@@ -28,8 +28,8 @@ Qed.
 
 Lemma concat_app {A} {l l':list (list A)} : concat (l ++ l') = concat l ++ concat l'.
   induction l.
-  - cbn. reflexivity.
-  - cbn in *.
+  - simpl. reflexivity.
+  - simpl in *.
     rewrite IHl.
     rewrite app_assoc.
     reflexivity.

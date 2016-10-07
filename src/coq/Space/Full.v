@@ -1,8 +1,7 @@
-Require Import EnsemblesEx.
-Require Import SpaceSearch.
+Require Import Basic.
 
 Section Full.
-  Context `{SpaceSearch}.
+  Context `{Basic}.
 
   Class Full A := {
     full : Space A;
@@ -94,7 +93,8 @@ Section Full.
     rewrite denoteSingleOk.
     constructor.
   Defined.
+
+  Arguments full {_ _}.
+
+  Definition all {A B} `{Full A} (q:A -> Space B) := bind full q.
 End Full.
-
-Arguments full {_ _ _}.
-

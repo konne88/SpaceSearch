@@ -1,14 +1,14 @@
-Require Import SpaceSearch.
-Require Import List.
-Import ListNotations.
-Require Import EnsemblesEx.
+Require Import Basic.
+Require Import Full.
+Require Import Integer.
+Require Precise.
 
 Parameter Symbolic : Type -> Type.
 Parameter symbolicEmpty : forall {A}, Symbolic A.
 Parameter symbolicSingle : forall {A}, A -> Symbolic A.
 Parameter symbolicUnion : forall {A}, Symbolic A -> Symbolic A -> Symbolic A. 
 Parameter symbolicBind : forall {A B},  Symbolic A -> (A -> Symbolic B) -> Symbolic B.
-Parameter symbolicSearch : forall {A}, Symbolic A -> list A.
+Parameter symbolicSearch : forall {A}, Symbolic A -> Precise.Result A.
 
 Extract Constant Symbolic "a"   => "__".
 Extract Constant symbolicEmpty  => "(lambda  (_) (assert false))".
@@ -19,7 +19,7 @@ Extract Constant symbolicSearch    => "(lambda  (e) (solve/evaluate/concretize e
 
 Axiom denoteSymbolic : forall {A}, Symbolic A -> Ensemble A.
 
-Instance denotationSymbolic {A} : Denotation (Symbolic A) (Ensemble A) := {| 
+Global Instance denotationSymbolic {A} : Denotation (Symbolic A) (Ensemble A) := {| 
   denote := denoteSymbolic
 |}.
 
@@ -27,29 +27,30 @@ Axiom denoteSymbolicEmptyOk : forall A, ⟦ symbolicEmpty ⟧ = Empty_set A.
 Axiom denoteSymbolicSingleOk : forall A a, ⟦ symbolicSingle a ⟧ = Singleton A a.
 Axiom denoteSymbolicUnionOk : forall A s t, ⟦ symbolicUnion s t ⟧ = Union A ⟦ s ⟧ ⟦ t ⟧.
 Axiom denoteSymbolicBindOk : forall A B s f, ⟦ symbolicBind s f ⟧ = BigUnion A B ⟦ s ⟧ (fun a => ⟦ f a ⟧).
-Axiom searchSymbolicResult : forall A s (a:A), List.In a (symbolicSearch s) -> In ⟦ s ⟧ a.
-Axiom searchSymbolicEmpty : forall A s, symbolicSearch s = [] -> ⟦ s ⟧ = Empty_set A.
-  
-Instance rosette : SpaceSearch := {|
+Axiom searchSymbolicResult : forall A s (a:A), symbolicSearch s = Precise.solution a -> In ⟦ s ⟧ a.
+Axiom searchSymbolicEmpty : forall A s, symbolicSearch s = Precise.empty -> ⟦ s ⟧ = Empty_set A.
+
+Global Instance rosetteBasic : Basic := {|
   Space := Symbolic;
   empty := @symbolicEmpty;
   single := @symbolicSingle;
   union := @symbolicUnion;
   bind := @symbolicBind;
-  search := @symbolicSearch
 |}.
 Proof.
   - apply denoteSymbolicEmptyOk.
   - apply denoteSymbolicSingleOk.
   - apply denoteSymbolicUnionOk.
   - apply denoteSymbolicBindOk.
+Defined.
+
+Global Instance rosetteSearch : Precise.Search := {|
+  Precise.search := @symbolicSearch
+|}.
+Proof.
   - apply searchSymbolicResult.
   - apply searchSymbolicEmpty.
 Defined.
-
-
-
-
 
 Parameter RosetteInt   : Type.
 Parameter rosetteMone  : RosetteInt.
@@ -70,7 +71,7 @@ Extract Constant rosetteLe    => "(lambdas (n m) (if (<= n m) '(True) '(False)))
 Parameter rosetteDenoteInt : RosetteInt -> Z.
 Extract Constant rosetteDenoteInt => "number->z".
 
-Instance rosetteDenotationInt : Denotation _ _ := {| 
+Global Instance rosetteDenotationInt : Denotation _ _ := {| 
   denote := rosetteDenoteInt
 |}.
 
@@ -80,6 +81,17 @@ Axiom rosetteDenoteOneOk : ⟦rosetteOne⟧ = 1.
 Axiom rosetteDenotePlusOk : forall n m, ⟦rosettePlus n m⟧ = ⟦n⟧ + ⟦m⟧.
 Axiom rosetteDenoteEqualOk : forall n m, rosetteEqual n m = (⟦ n ⟧ =? ⟦ m ⟧).
 Axiom rosetteDenoteLeOk : forall n m, rosetteLe n m = (⟦ n ⟧ <=? ⟦ m ⟧).
+
+Parameter fullInt : Space RosetteInt.
+Axiom denoteFullIntOk : ⟦ fullInt ⟧ = Full_set RosetteInt.
+Extract Constant fullInt => "(lambda (_) 
+  (define-symbolic* n integer?)
+  n)".
+
+Global Instance fullRosetteInteger : Full RosetteInt := {|
+  full := fullInt;
+  denoteFullOk := denoteFullIntOk
+|}.
 
 Global Instance rosetteInteger : Integer := {| 
   Int := RosetteInt;
@@ -96,19 +108,3 @@ Global Instance rosetteInteger : Integer := {|
   denoteEqualOk := rosetteDenoteEqualOk;
   denoteLeOk := rosetteDenoteLeOk
 |}.
-
-Parameter fullInt : Space Int.
-Axiom denoteFullIntOk : ⟦ fullInt ⟧ = Full_set Int.
-
-Extract Constant fullInt => "(lambda (_) 
-  (define-symbolic* n integer?)
-  n)".
-
-Global Instance fullRosetteInteger : Full Int := {|
-  full := fullInt;
-  denoteFullOk := denoteFullIntOk
-|}.
-
-
-
-

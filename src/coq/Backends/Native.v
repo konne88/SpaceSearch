@@ -1,20 +1,20 @@
-Require Import SpaceSearch.
-Require Import EnsemblesEx.
+Require Import Basic.
 Require Import ListEx.
-Import ListNotations.
+Require Precise.
 
-Instance denoteListToEnsemble {A} : Denotation (list A) (Ensemble A) := {|
+Export ListEx.
+
+Global Instance denoteListToEnsemble {A} : Denotation (list A) (Ensemble A) := {|
   denote l := fun a => In a l
 |}.
 
-Instance listSpaceSearch : SpaceSearch.
+Global Instance listSpace : Basic.
   refine {|
     Space := list;
     empty A := [];
     single A a := [a];
     union A l l' := l ++ l';
-    bind A B S f := concat (map f S);
-    search A l := l
+    bind A B S f := concat (map f S)
   |}.
 Proof.
   - intros. 
@@ -72,12 +72,30 @@ Proof.
           right.
           intuition.
         }
+Defined.
+
+Global Instance listSearch : Precise.Search.
+  refine {| 
+    Precise.search A l := match l with 
+                          | [] => Precise.empty 
+                          | a :: _ => Precise.solution a 
+                          end
+  |}.
   - intros ? [] ? h.
-    + destruct h.
+    + congruence.
     + simpl in *.
-      assumption.
+      left.
+      congruence.
   - intros ? [] h.
     + rewrite emptyIsFalse.
       reflexivity.
     + inversion h.
 Defined.
+
+Lemma listMapEqMap {A B l} {f:A->B} : map f l = List.map f l.
+  induction l.
+  - reflexivity.
+  - simpl in *.
+    congruence.
+Qed.
+

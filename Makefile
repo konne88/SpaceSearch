@@ -27,8 +27,16 @@ examples: build
 	chmod +x integer-tests.rkt
 
 clean:
-	cd $(SRC_COQ); rm -rf Makefile **.glob **.v.d **.scm **.vo **.coq-native **.*.aux **"#"*"#" **".#"*
-	cd $(EXA_COQ); rm -rf Makefile **.glob **.v.d **.scm **.vo **.coq-native **.*.aux **"#"*"#" **".#"*
-	cd $(SRC_RKT); rm -rf compiled
-	rm -rf queens.rkt integer-tests.rkt compiled
+	find . \( \
+          -name "*.glob" -o \
+	  -name "*.v.d" -o \
+          -name "*.scm" -o \
+          -name "*.vo" -o \
+          -name ".*.aux" -o \
+          -name "#*#" -o \
+          -name ".#*" -o \
+          -name "*~" \
+        \) -exec rm {} +
+	find . -name .coq-native -o -name compiled -exec rm -r {} +
+	rm -f $(EXA_COQ)/Makefile $(SRC_COQ)/Makefile queens.rkt integer-tests.rkt
 

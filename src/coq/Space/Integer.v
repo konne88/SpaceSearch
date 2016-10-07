@@ -1,10 +1,8 @@
-Require Import SpaceSearch.
+Require Import Basic.
 Require Import Full.
-Require Import List.
-Import ListNotations.
-Require Import EnsemblesEx.
 Require Import ZArith.
-Require Import Rosette.
+
+Export ZArith.
 
 Open Scope Z.
 

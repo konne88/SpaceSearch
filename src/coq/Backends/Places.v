@@ -1,8 +1,7 @@
-Require Import ListEx.
-Require Import EnsemblesEx.
-Require Import SpaceSearch.
-Require Import ListSpaceSearch.
+Require Import Basic.
+Require Import Native.
 Require Import Basics.
+Require Import Distributed.
 Require Import FunctionalExtensionality.
 
 Open Scope program_scope.
@@ -10,30 +9,6 @@ Open Scope program_scope.
 Parameter Future : Type -> Type. 
 Parameter force : forall {A}, Future A -> A.
 Extract Constant force => "(lambda (f) (f))".
-
-Definition map `{S:SpaceSearch} {A B} (f:A->B) s := bind s (single ∘ f).
-
-Lemma listMapEqMap {A B l} {f:A->B} : @map listSpaceSearch A B f l = List.map f l.
-  induction l.
-  - reflexivity.
-  - simpl in *.
-    congruence.
-Qed.
-
-Class Runnable := {
-  runnable : Type -> Type -> Type; 
-  denoteRunnable {A B} :> Denotation (runnable A B) (A -> B);
-}.
-
-Class ParallelSearch `{SpaceSearch} `{Runnable} := {
-  parallelSearch {A B} : runnable A B -> Space A -> list B;
-
-  parallelSearchResult {A B r} {s:Space A} {b:B} :
-    List.In b (parallelSearch r s) -> In ⟦ map ⟦ r ⟧ s ⟧ b;
-
-  parallelSearchEmpty {A B r} {s:Space A} : 
-    parallelSearch r s = [] -> ⟦ map ⟦ r ⟧ s ⟧ = Empty_set B
-}.
 
 Parameter Worker : Type -> Type -> Type.
 Parameter denoteWorker : forall {A B}, Worker A B -> A -> B.
@@ -55,19 +30,20 @@ Section ParallelSearchPlaces.
   Parameter enqueueTask : Pool -> Worker Task Result -> Task -> Future Result.
   Axiom enqueueTaskOk : forall p w t, force (enqueueTask p w t) = ⟦ w ⟧ t.
 
-  Definition parallelSearchPlaces (w:Worker Task Result) (ts:list Task) : list Result :=
+  Definition parallelSearchPlaces (ts:list Task) (w:Worker Task Result) : list Result :=
     let p := placePool tt
     in  force <$> (enqueueTask p w <$> ts).
 
 End ParallelSearchPlaces.
 
-Instance parallelSearchPlaces' : @ParallelSearch listSpaceSearch runnableWorker.
+Instance parallelSearchPlaces' : @Distributed.Search _ runnableWorker.
   refine {|
-    parallelSearch := parallelSearchPlaces
+    Distributed.search := parallelSearchPlaces
   |}.
 Proof.
-  - intros A B r s b h.
-    rewrite listMapEqMap.
+  intros A B r s b.
+  constructor; intro h.
+  - (* rewrite listMapEqMap.
     unfold parallelSearchPlaces in h.
     apply in_map_iff in h. 
     destruct h as [f [? h]].
@@ -77,8 +53,10 @@ Proof.
     subst.
     rewrite enqueueTaskOk.
     apply in_map.
-    assumption.
-  - intros A B r s h.
+    assumption. *)
+    admit.
+  - admit. 
+(*
     apply Extensionality_Ensembles'; intros b.
     rewrite listMapEqMap.
     constructor; [|intuition].
@@ -101,7 +79,8 @@ Proof.
     exists a.
     rewrite enqueueTaskOk.
     intuition.
-Defined.
+*)
+Admitted.
 
 Extract Constant placePool => "place-pool".
 Extract Constant enqueueTask => "enqueue-task".

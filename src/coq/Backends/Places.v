@@ -23,18 +23,15 @@ Instance runnableWorker : Runnable := {|
   runnable := Worker
 |}.
 
-Parameter Pool : Type.
-Parameter placePool : unit -> Pool.
-
 Section ParallelSearchPlaces.
   Variable Task Result : Type.
 
-  Parameter enqueueTask : Pool -> Worker Task Result -> Task -> Future Result.
-  Axiom enqueueTaskOk : forall p w t, force (enqueueTask p w t) = ⟦ w ⟧ t.
+  Parameter createPool : unit -> Worker Task Result -> Task -> Future Result.
+  Axiom createPoolOk : forall w t, force (createPool tt w t) = ⟦ w ⟧ t.
 
   Definition parallelSearchPlaces (ts:list Task) (w:Worker Task Result) : list Result :=
-    let p := placePool tt
-    in  force <$> (enqueueTask p w <$> ts).
+    let enqueueTask := createPool tt
+    in  force <$> (enqueueTask w <$> ts).
 
 End ParallelSearchPlaces.
 
@@ -51,7 +48,7 @@ Proof.
     apply in_map_iff in h. 
     destruct h as [f [? h]].
     subst.
-    rewrite enqueueTaskOk.
+    rewrite createPoolOk.
     apply in_map.
     assumption.
   - rewrite listMapEqMap in h.
@@ -63,9 +60,8 @@ Proof.
       enough (B = A) by congruence
     end. 
     extensionality x.
-    apply enqueueTaskOk.
+    apply createPoolOk.
 Qed.
 
-Extract Constant placePool => "(lambda (_) (place-pool))".
-Extract Constant enqueueTask => "enqueue-task".
+Extract Constant createPool => "(lambda (_) (place-pool))".
 

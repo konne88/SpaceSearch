@@ -78,6 +78,7 @@ RUN ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa && \
     sed -i.bak 's/Port 22/Port 2222/' /etc/ssh/sshd_config
 
 EXPOSE 2222
+EXPOSE 1234-1298
 
 # enable rosette debugging
 RUN cd rosette && \

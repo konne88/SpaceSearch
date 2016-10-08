@@ -66,6 +66,19 @@ RUN git clone https://github.com/emina/rosette.git && \
     cd rosette; git checkout 2.2 && \
                 raco pkg install
 
+# install sshd
+RUN apt-get update; \
+    apt-get install -y \
+      openssh-server
+RUN ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa && \
+    cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys && \
+    echo 'Host *' >> /root/.ssh/config && \
+    echo '    StrictHostKeyChecking no' >> /root/.ssh/config && \
+    echo '    Port 2222' >> /root/.ssh/config && \
+    sed -i.bak 's/Port 22/Port 2222/' /etc/ssh/sshd_config
+
+EXPOSE 2222
+
 # enable rosette debugging
 RUN cd rosette && \
 #   sed -i "s/;(printf/(printf/g" rosette/base/core/effects.rkt && \

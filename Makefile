@@ -13,19 +13,25 @@ build:
 examples: build
 	cd $(EXA_COQ); find . -name '*.v' -exec coq_makefile -R ../../${SRC_COQ} "SpaceSearch" -o Makefile {} +
 	make -j4 -C$(EXA_COQ)
+	# parallel worker
+	cp $(EXA_RKT)/worker-header.rkt $(SRC_RKT)/worker.rkt
+	tail -n +4 $(EXA_COQ)/worker.scm >> $(SRC_RKT)/worker.rkt
+	# parallel algorithm
+	cp $(EXA_RKT)/header.rkt parallel-test.rkt
+	tail -n +4 $(EXA_COQ)/parallel-test.scm >> parallel-test.rkt
+	cat $(EXA_RKT)/parallel-test.rkt >> parallel-test.rkt
 	# queens
 	cp $(EXA_RKT)/header.rkt queens.rkt
 	tail -n +4 $(EXA_COQ)/queens.scm >> queens.rkt
 	cat $(EXA_RKT)/queens.rkt >> queens.rkt
-	raco make queens.rkt
-	chmod +x queens.rkt
 	# integers
 	cp $(EXA_RKT)/header.rkt integer-tests.rkt
 	tail -n +4 $(EXA_COQ)/integer-tests.scm >> integer-tests.rkt
 	cat $(EXA_RKT)/integer-tests.rkt >> integer-tests.rkt
-	raco make integer-tests.rkt
-	chmod +x integer-tests.rkt
-
+	# build examples, and make them executable
+	raco make *.rkt
+	chmod +x *.rkt
+	
 clean:
 	find . \( \
           -name "*.glob" -o \
@@ -36,7 +42,7 @@ clean:
           -name "#*#" -o \
           -name ".#*" -o \
           -name "*~" \
-        \) -exec rm {} +
+        \) -exec rm -f {} +
 	find . -name .coq-native -o -name compiled -exec rm -r {} +
-	rm -f $(EXA_COQ)/Makefile $(SRC_COQ)/Makefile queens.rkt integer-tests.rkt
+	rm -f $(EXA_COQ)/Makefile $(SRC_COQ)/Makefile queens.rkt integer-tests.rkt parallel-test.rkt src/racket/worker.rkt
 

@@ -1,23 +1,12 @@
 #lang racket
 
-(require "util/list.rkt")
-(require "util/rosette.rkt")
-(require "util/extraction-racket.rkt")
-(require (except-in "network/network.rkt" current original path))
-(require "config.rkt")
-(require "bgpv-core.rkt")
-(require "setup.rkt")
+(require "extraction.rkt" "worker.rkt")
 
 (require racket/place)
 (require racket/place/distributed)
 (require racket/serialize)
 
-(provide place-pool enqueue-task)
-
-(define (run-runnable runnable input)
-  (case runnable
-    [(bgp-core) (@ bgpCore input)]
-    [else (error "unknown runnable"))))
+(provide place-pool enqueue-task run-worker)
 
 (define (forever f) (f) (forever f))
 
@@ -36,7 +25,20 @@
     (define r (regexp-match #rx"^([^_]+)_NAME$" evar))
     (if r (list (string-downcase (bytes->string/utf-8 (second r)))) '()))))
 
-(define (place-pool worker)
+(define (run-worker ch)
+  (define cpu (deserialize (place-channel-get ch)))
+  (define node (deserialize (place-channel-get ch)))
+  (printf "# place loaded at ~a on cpu ~a\n" node cpu)
+  (flush-output)
+  (define worker (deserialize (place-channel-get ch)))
+  (define task (deserialize (place-channel-get ch)))
+  (printf "# place received task and worker at ~a on cpu ~a\n" node cpu)
+  (define result (@ denoteWorker worker task))
+  (place-channel-put ch (serialize result))
+  (printf "# place done at ~a on cpu ~a\n" node cpu)
+  (flush-output))
+
+(define (place-pool)
   (define task-queue (make-channel))
   (define thd (current-thread))
   (define count 0)
@@ -53,69 +55,27 @@
       (flush-output)
       (define nd (create-place-node node #:listen-port (+ 1234 cpu)))
       (forever (lambda ()
-        (define task (channel-get task-queue))
+        (define serializedWorker (channel-get task-queue))
+        (define serializedTask (channel-get task-queue))
         (define ch (dynamic-place #:at nd (quote-module-path) 'run-worker))
         (place-channel-put ch (serialize cpu))
         (place-channel-put ch (serialize node))
-        (place-channel-put ch (serialize worker)
-        (place-channel-put ch (serialize task))
+        (place-channel-put ch serializedWorker)
+        (place-channel-put ch serializedTask)
         (define result (deserialize (place-channel-get ch)))
-        (thread-send thd result)))))))
+        (thread-send thd result))))))
 
   ; return initialized state
-  (values count task-queue))
+  (cons count task-queue))
 
-(define enqueue-task (lambdas (pool task)
-  (define-values (count task-queue) pool)
+(define enqueue-task (lambdas (pool worker task)
+  (define count (car pool))
+  (define task-queue (cdr pool))
   (set! count (+ count 1))
-  (write-string (string-append "checking " (~a count) " at " (~a (current-seconds)) "\n"))
+  (printf "# checking task ~a at time ~a\n" count (current-seconds))
   (flush-output)
+  (channel-put task-queue (serialize worker))
   (channel-put task-queue (serialize task))
+  (flush-output)
   (lambda () (thread-receive))))
-
-(define (run-worker ch)
-  (define cpu (deserialize (place-channel-get ch)))
-  (define node (deserialize (place-channel-get ch)))
-  (define worker (deserialize (place-channel-get ch)))
-  (write-string (string-append "# place loaded worker " (~a worker) " at " (~a node) " on cpu " (~a cpu) "\n"))
-  (flush-output)
-  (define task (deserialize (place-channel-get ch)))
-  (define result (run-runnable worker task))
-  (place-channel-put ch (serialize result))
-  (write-string (string-append "# place done at " (~a node) " on cpu " (~a cpu) "\n"))
-  (flush-output))
-
-
-
-
-(define distributed-bgpv-scheduler (lambdas (setup query routings)
-  (define checks (coq-list-length routings))
-  (write-string (string-append "total number of checks " (~a checks) "\n"))
-  (flush-output)
-
-  ; provide work for threads
-  (define count 0)
-  (@ search listSpaceSearch (@ bind listSpaceSearch 
-    (coq-list-chunks parallel-batch-size routings) (lambda (sub-routings)
-      (define jobs (@ bind listSpaceSearch 
-        (coq-list-chunks symbolic-batch-size sub-routings) (lambda
-(sub-sub-routings)
-          (set! count (+ count symbolic-batch-size))
-          (write-string (string-append "checking " (~a count) " of " (~a checks)
-" at " (~a (current-seconds)) "\n"))
-          (flush-output)
-          (channel-put work-queue sub-sub-routings)
-          (@ single listSpaceSearch count))))
-
-      (write-string (string-append "collecting " (~a (coq-list-length jobs)) "
-results\n"))
-      (flush-output)
-
-      ; collect results
-      (@ bind listSpaceSearch jobs (lambda (_) (thread-receive))))))))
-
-
-
-
-
 

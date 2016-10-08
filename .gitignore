@@ -8,6 +8,8 @@ compiled
 *.glob
 *.v.d
 .coq-native
-queens.rkt
-integer-tests.rkt
 **/Makefile
+src/racket/worker.rkt
+/integer-tests.rkt
+/parallel-test.rkt
+/queens.rkt

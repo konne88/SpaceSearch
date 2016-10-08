@@ -4,6 +4,8 @@ Require Import Basics.
 Require Import Distributed.
 Require Import FunctionalExtensionality.
 
+Export Distributed.
+
 Open Scope program_scope.
 
 Parameter Future : Type -> Type. 
@@ -36,9 +38,9 @@ Section ParallelSearchPlaces.
 
 End ParallelSearchPlaces.
 
-Instance parallelSearchPlaces' : @Distributed.Search _ runnableWorker.
+Instance parallelSearchPlaces' : @Search listSpace runnableWorker.
   refine {|
-    Distributed.search := parallelSearchPlaces
+    search := parallelSearchPlaces
   |}.
 Proof.
   intros A B r s b.
@@ -64,9 +66,6 @@ Proof.
     apply enqueueTaskOk.
 Qed.
 
-Extract Constant placePool => "place-pool".
-Extract Constant enqueueTask => "enqueue-task".
+Extract Constant placePool => "(lambda (_) (place-pool))".
 Extract Constant enqueueTask => "enqueue-task".
 
-Parameter bgpvCore : Worker nat bool.
-Axiom denoteBgpvCoreOk : ⟦ bgpvCore ⟧ = (fun n => true).

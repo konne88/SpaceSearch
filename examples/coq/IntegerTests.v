@@ -1,8 +1,8 @@
-Require Import SpaceSearch.
+Require Import Basic.
 Require Import Full.
-Require Import Rosette.
+Require Import Rosette.Quantified.
 Require Import ListEx.
-Require Import Integers.
+Require Import Integer.
 
 Definition solveAddTransSpace : Space (Int * Int * Int * Int * Int) :=
   bind full (fun x:Int =>
@@ -10,12 +10,12 @@ Definition solveAddTransSpace : Space (Int * Int * Int * Int * Int) :=
   bind full (fun z:Int => 
     let a := plus (plus x y) z in
     let b := plus x (plus y z) in
-      if equal a b then empty else single (x,y,z,a,b)))).
+      if equal a b then Basic.empty else single (x,y,z,a,b)))).
 
-Definition solveAddTrans : list (Int * Int * Int * Int * Int) :=
+Definition solveAddTrans : Result (Int * Int * Int * Int * Int) :=
   search solveAddTransSpace.
 
-Definition solveAddAddTrans : list (Int * Int * Int * Int * Int) :=
+Definition solveAddAddTrans : Result (Int * Int * Int * Int * Int) :=
   search (
     bind full (fun x:Int =>
     bind full (fun y:Int => 

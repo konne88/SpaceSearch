@@ -24,6 +24,7 @@
 (define-syntax-rule (solve/evaluate/concretize expr)
   (let* ([out (void)]
          [sol (solve (set! out (expr (void))))])
-    (if (unsat? sol) '(Empty)
-      `(Solution ,(evaluate out (concretize sol))))))
+    (if (unsat? sol) '(Uninhabited)
+    (if (unknown? sol) '(Unknown)
+      `(Solution ,(evaluate out (concretize sol)))))))
 

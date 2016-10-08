@@ -1,14 +1,19 @@
 Require Import Basic.
 Require Import Full.
 Require Import Integer.
-Require Precise.
+Require Import Heuristic.
+
+Export Basic.
+Export Full.
+Export Integer.
+Export Heuristic.
 
 Parameter Symbolic : Type -> Type.
 Parameter symbolicEmpty : forall {A}, Symbolic A.
 Parameter symbolicSingle : forall {A}, A -> Symbolic A.
 Parameter symbolicUnion : forall {A}, Symbolic A -> Symbolic A -> Symbolic A. 
 Parameter symbolicBind : forall {A B},  Symbolic A -> (A -> Symbolic B) -> Symbolic B.
-Parameter symbolicSearch : forall {A}, Symbolic A -> Precise.Result A.
+Parameter symbolicSearch : forall {A}, Symbolic A -> Heuristic.Result A.
 
 Extract Constant Symbolic "a"   => "__".
 Extract Constant symbolicEmpty  => "(lambda  (_) (assert false))".
@@ -27,8 +32,8 @@ Axiom denoteSymbolicEmptyOk : forall A, ⟦ symbolicEmpty ⟧ = Empty_set A.
 Axiom denoteSymbolicSingleOk : forall A a, ⟦ symbolicSingle a ⟧ = Singleton A a.
 Axiom denoteSymbolicUnionOk : forall A s t, ⟦ symbolicUnion s t ⟧ = Union A ⟦ s ⟧ ⟦ t ⟧.
 Axiom denoteSymbolicBindOk : forall A B s f, ⟦ symbolicBind s f ⟧ = BigUnion A B ⟦ s ⟧ (fun a => ⟦ f a ⟧).
-Axiom searchSymbolicResult : forall A s (a:A), symbolicSearch s = Precise.solution a -> In ⟦ s ⟧ a.
-Axiom searchSymbolicEmpty : forall A s, symbolicSearch s = Precise.empty -> ⟦ s ⟧ = Empty_set A.
+Axiom searchSymbolicResult : forall A s (a:A), symbolicSearch s = solution a -> In ⟦ s ⟧ a.
+Axiom searchSymbolicEmpty : forall A s, symbolicSearch s = uninhabited -> ⟦ s ⟧ = Empty_set A.
 
 Global Instance rosetteBasic : Basic := {|
   Space := Symbolic;
@@ -44,8 +49,8 @@ Proof.
   - apply denoteSymbolicBindOk.
 Defined.
 
-Global Instance rosetteSearch : Precise.Search := {|
-  Precise.search := @symbolicSearch
+Global Instance rosetteSearch : Heuristic.Search := {|
+  Heuristic.search := @symbolicSearch
 |}.
 Proof.
   - apply searchSymbolicResult.
@@ -88,12 +93,12 @@ Extract Constant fullInt => "(lambda (_)
   (define-symbolic* n integer?)
   n)".
 
-Global Instance fullRosetteInteger : Full RosetteInt := {|
+Global Instance fullRosetteInteger : @Full rosetteBasic RosetteInt := {|
   full := fullInt;
   denoteFullOk := denoteFullIntOk
 |}.
 
-Global Instance rosetteInteger : Integer := {| 
+Global Instance rosetteInteger : @Integer rosetteBasic := {| 
   Int := RosetteInt;
   mone := rosetteMone;
   zero := rosetteZero;
@@ -108,3 +113,4 @@ Global Instance rosetteInteger : Integer := {|
   denoteEqualOk := rosetteDenoteEqualOk;
   denoteLeOk := rosetteDenoteLeOk
 |}.
+

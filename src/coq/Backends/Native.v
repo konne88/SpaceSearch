@@ -1,6 +1,6 @@
 Require Import ListEx.
 Require Import Basic.
-Require Precise.
+Require Import Precise.
 
 Export ListEx.
 
@@ -74,11 +74,11 @@ Proof.
         }
 Defined.
 
-Global Instance listSearch : Precise.Search.
+Global Instance listSearch : Search.
   refine {| 
     Precise.search A l := match l with 
-                          | [] => Precise.empty 
-                          | a :: _ => Precise.solution a 
+                          | [] => uninhabited 
+                          | a :: _ => solution a 
                           end
   |}.
   - intros ? [] ? h.

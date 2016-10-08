@@ -15,8 +15,8 @@
 
 (define (format-result n r)
   (match r
-    ((None) "No solution")
-    ((Some s) (apply string-append (format-solution n s)))))
+    ((Uninhabited) "No solution")
+    ((Solution s) (apply string-append (format-solution n s)))))
 
 (define n (string->number (vector-ref (current-command-line-arguments) 0)))
 

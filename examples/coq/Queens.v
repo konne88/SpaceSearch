@@ -1,9 +1,11 @@
-Require Import SpaceSearch.
-Require Import Rosette.
+Require Import Basic.
+Require Import Rosette.Unquantified.
 Require Import ListEx.
-Require Import ListSpaceSearch.
+Require Import Native.
 Require Import Bool.
 Require Import Arith.EqNat.
+
+Open Scope nat.
 
 Fixpoint distance (n m:nat) : nat :=
   match n, m with
@@ -22,22 +24,22 @@ Definition isSafe (x y x' y':nat) : bool :=
 Compute (isSafe 0 0 0 0).
 Compute (isSafe 0 1 1 0).
 
-Fixpoint nNat `{SpaceSearch} (n:nat) : Space nat :=
+Fixpoint nNat `{Basic} (n:nat) : Space nat :=
   match n with
   | 0%nat => empty
   | S n => union (nNat n) (single n) 
   end.
 
-Compute (@nNat listSpaceSearch 3).
+Compute (@nNat listSpace 3).
 
-Fixpoint nListSpace `{SpaceSearch} {A} (s:Space A) (n:nat) : Space (list A) :=
+Fixpoint nListSpace `{Basic} {A} (s:Space A) (n:nat) : Space (list A) :=
   match n with
   | 0%nat => single []
   | S n => bind (nListSpace s n) (fun l => 
           bind s (fun a => single (a :: l)))
   end.
 
-Compute (@nListSpace listSpaceSearch nat (nNat 2) 3).
+Compute (@nListSpace listSpace nat (nNat 2) 3).
 
 Definition index {A} : list A -> list (A * nat) :=
   let fix rec n l :=
@@ -45,11 +47,11 @@ Definition index {A} : list A -> list (A * nat) :=
     | [] => []
     | a::l => (a,n) :: rec (S n) l
     end 
-  in rec 0.
+  in rec (0 % nat).
 
 Compute (index [false; true]).
 
-Existing Instance rosette.
+Existing Instance rosetteSearch.
 
 Definition listToOption {A} (l:list A) : option A :=
   match l with
@@ -57,15 +59,15 @@ Definition listToOption {A} (l:list A) : option A :=
   | a::_ => Some a 
   end.
 
-Definition solveNQueens (n:nat) : option (list nat) :=
-  listToOption (search (
+Definition solveNQueens (n:nat) : Result (list nat) :=
+  search (
     bind (nListSpace (nNat n) n) (fun xs:list nat =>
       let ps := index xs in
       if forallb (fun p =>
          forallb (fun q => 
            isSafe (fst p) (snd p) (fst q) (snd q)) ps) ps
       then single xs 
-      else empty))).
+      else empty)).
 
 Extraction Language Scheme.
 

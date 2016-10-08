@@ -1,5 +1,5 @@
-Require Import Basic.
 Require Import ListEx.
+Require Import Basic.
 Require Precise.
 
 Export ListEx.
@@ -92,7 +92,7 @@ Global Instance listSearch : Precise.Search.
     + inversion h.
 Defined.
 
-Lemma listMapEqMap {A B l} {f:A->B} : map f l = List.map f l.
+Lemma listMapEqMap {A B l} {f:A->B} : Basic.map f l = List.map f l.
   induction l.
   - reflexivity.
   - simpl in *.

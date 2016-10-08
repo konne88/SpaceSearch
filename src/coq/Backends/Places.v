@@ -43,44 +43,26 @@ Instance parallelSearchPlaces' : @Distributed.Search _ runnableWorker.
 Proof.
   intros A B r s b.
   constructor; intro h.
-  - (* rewrite listMapEqMap.
+  - rewrite listMapEqMap.
     unfold parallelSearchPlaces in h.
+    rewrite map_map in h.
     apply in_map_iff in h. 
     destruct h as [f [? h]].
     subst.
-    apply in_map_iff in h.
-    destruct h as [a [? h]].
-    subst.
     rewrite enqueueTaskOk.
     apply in_map.
-    assumption. *)
-    admit.
-  - admit. 
-(*
-    apply Extensionality_Ensembles'; intros b.
-    rewrite listMapEqMap.
-    constructor; [|intuition].
-    intros h'.
-    exfalso.
-    enough (List.In b (parallelSearchPlaces A B r s)) as h''. {
-      eapply in_nil.
-      rewrite h in h''.
-      apply h''.
-    }
-    clear h; rename h' into h.
-    cbn in h.
-    apply in_map_iff in h. 
-    destruct h as [a [? h]].
-    subst.
+    assumption.
+  - rewrite listMapEqMap in h.
     unfold parallelSearchPlaces.
-    generalize (placePool tt); intros p.
     rewrite map_map.
-    rewrite in_map_iff.
-    exists a.
-    rewrite enqueueTaskOk.
-    intuition.
-*)
-Admitted.
+    simpl in *.
+    match goal with
+    | _ : In _ (?A <$> s) |- In _ (?B <$> s) => 
+      enough (B = A) by congruence
+    end. 
+    extensionality x.
+    apply enqueueTaskOk.
+Qed.
 
 Extract Constant placePool => "place-pool".
 Extract Constant enqueueTask => "enqueue-task".

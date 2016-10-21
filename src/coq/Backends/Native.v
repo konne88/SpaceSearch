@@ -113,12 +113,11 @@ Proof.
   split; intros.
   - induction l1; simpl in *; try contradiction.
     destruct H1 as [H2 | H2];
-      simpl; destruct (eqDecide x2 a) as [H3 | H3];
+      destruct (eqDecide x2 a) as [H3 | H3];
       simpl; try (rewrite H2 in H3); intuition.
   - induction l1; simpl in *; try contradiction.
-    destruct (eqDecide x2 a) as [H2 | H2].
-    * intuition.
-    * destruct H1; intuition.
+    destruct (eqDecide x2 a) as [H2 | H2];
+      try (destruct H1); intuition.
 Qed.
 
 Lemma In_removeList {A} `{eqDec A} : forall (x : A) (l1 l2 : list A),
@@ -154,10 +153,9 @@ destruct t; intro H0; apply Extensionality_Ensembles; simpl.
 - split.
   * intros x H'. destruct (eqDecide x a) as [H1 | H1].
     + split; rewrite H1 in H'; apply remove_In in H'; contradiction.
-    + apply In_remove_other in H'.
-      ** apply In_removeList in H'. destruct H' as [H2 H3].
-         split; try intuition.
-      ** assumption.
+    + apply In_remove_other in H'; auto.
+      apply In_removeList in H'. destruct H' as [H2 H3].
+      split; try intuition.
   * intros. destruct H as [H1 H2].
     assert (a <> x /\ ~In x t) as H3 by (split; firstorder).
     clear H2.

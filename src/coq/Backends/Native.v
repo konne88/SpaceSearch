@@ -201,9 +201,18 @@ Global Instance listIncSearch : IncSearch.
 idtac.
 simple refine {|
   incSearch := (fun (A: Type) `{eqDec A} (s' s : Space A) => search (minus s' s))
-|};
-  induction s'; intros;
+       |};
+  destruct s'; intros;
     assert (s = []) as H' by (apply denotationEmpty; assumption);
-    rewrite H' in *; simpl in *;
-    try intuition; try inversion H0; try auto.
+    subst; simpl in *;
+    try intuition; try (inversion H0; auto).
 Defined.
+
+Theorem incSearchEquiv {A} `{eqDec A} : forall s s',
+    ⟦ s ⟧ = Empty_set A -> search s' = incSearch s' s.
+Proof.
+  intros.
+  assert (s = []) by (apply denotationEmpty; assumption).
+  subst.
+  destruct s'; reflexivity.
+Qed.

@@ -3,6 +3,7 @@ Require Import Basic.
 Require Import Minus.
 Require Import EqDec.
 Require Import Precise.
+Require Import Incremental.
 
 Export ListEx.
 
@@ -163,4 +164,46 @@ destruct t; intro H0; apply Extensionality_Ensembles; simpl.
     apply In_remove_other; try intuition.
     apply In_removeList.
     split; auto.
+Defined.
+
+Lemma nothingInEmpty {A} `{eqDec A}: forall (s : list A), 
+    ⟦ s ⟧ = Empty_set A -> (forall a, ~In a s).
+Proof.  
+  intros. simpl in *.
+  assert (In a s = (fun a => In a s) a) by reflexivity.
+  unfold not. rewrite H0 in H1.
+  rewrite H1.
+  contradiction.
+Qed.
+
+Lemma nothingInNil {A} `{eqDec A} : forall (s : list A),
+    (forall a, ~In a s) <-> s = [].
+Proof.
+  split; intros.
+  - induction s; try reflexivity.
+    assert (~In a (a :: s)) as H1 by (apply H0).
+    firstorder.
+  - rewrite H0.
+    apply in_nil.
+Qed.
+
+Lemma denotationEmpty {A} `{eqDec A} : forall (s : list A),
+    ⟦ s ⟧ = Empty_set A <-> s = [].
+Proof.
+  split; intros.
+  - apply nothingInNil. apply nothingInEmpty. assumption.
+  - subst. simpl.
+    apply Extensionality_Ensembles.
+    firstorder.
+Qed.
+    
+Global Instance listIncSearch : IncSearch.
+idtac.
+simple refine {|
+  incSearch := (fun (A: Type) `{eqDec A} (s' s : Space A) => search (minus s' s))
+|};
+  induction s'; intros;
+    assert (s = []) as H' by (apply denotationEmpty; assumption);
+    rewrite H' in *; simpl in *;
+    try intuition; try inversion H0; try auto.
 Defined.

@@ -89,6 +89,7 @@ Axiom rosetteDenotePlusOk : forall n m, ⟦rosettePlus n m⟧ = ⟦n⟧ + ⟦m�
 Axiom rosetteDenoteMinusOk : forall n m, ⟦rosetteMinus n m⟧ = ⟦n⟧ - ⟦m⟧.
 Axiom rosetteDenoteEqualOk : forall n m, rosetteEqual n m = (⟦ n ⟧ =? ⟦ m ⟧).
 Axiom rosetteDenoteLeOk : forall n m, rosetteLe n m = (⟦ n ⟧ <=? ⟦ m ⟧).
+Axiom rosetteDenoteInjective : forall n m, ⟦ n ⟧ = ⟦ m ⟧ -> n = m.
 
 Parameter fullInt : Space RosetteInt.
 Axiom denoteFullIntOk : ⟦ fullInt ⟧ = Full_set RosetteInt.
@@ -116,6 +117,7 @@ Global Instance rosetteInteger : @Integer rosetteBasic := {|
   denotePlusOk := rosetteDenotePlusOk;
   denoteMinusOk := rosetteDenoteMinusOk;
   denoteEqualOk := rosetteDenoteEqualOk;
-  denoteLeOk := rosetteDenoteLeOk
+  denoteLeOk := rosetteDenoteLeOk;
+  denoteInjective := rosetteDenoteInjective
 |}.
 

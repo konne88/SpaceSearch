@@ -15,3 +15,4 @@ src/racket/worker.rkt
 /queens.rkt
 /primes-naive.rkt
 /primes-incremental.rkt
+/primes-bind.rkt

@@ -36,6 +36,10 @@ examples: build
 	cp $(EXA_RKT)/header.rkt primes-incremental.rkt
 	tail -n +4 $(EXA_COQ)/primes-incremental.scm >> primes-incremental.rkt
 	cat $(EXA_RKT)/primes-incremental.rkt >> primes-incremental.rkt
+
+	cp $(EXA_RKT)/header.rkt primes-bind.rkt
+	tail -n +4 $(EXA_COQ)/primes-bind.scm >> primes-bind.rkt
+	cat $(EXA_RKT)/primes-bind.rkt >> primes-bind.rkt
 	# build examples, and make them executable
 	raco make *.rkt
 	chmod +x *.rkt

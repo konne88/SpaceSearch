@@ -4,6 +4,7 @@ Require Import Minus.
 Require Import EqDec.
 Require Import Precise.
 Require Import Incremental.
+Require Import Bind.
 
 Export ListEx.
 
@@ -105,8 +106,36 @@ Qed.
 Fixpoint removeList {A} `{eqDec A} (l1 l2 : list A) : list A :=
   match l2 with
   | [] => l1
-  | h :: t => remove eqDecide h (removeList l1 t)
+  | h :: t => removeList (remove eqDecide h l1) t
   end.
+
+
+(*
+Definition remove' {A} `{eqDec A} (x : A) (l : list A) : list A :=
+  let aux := (fix look x l acc :=
+                match l with
+                | [] => acc
+                | h :: t => if eqDecide h x then look x t acc
+                            else look x t (h :: acc)
+                end) in
+  aux x l [].
+
+Fixpoint removeList {A} `{eqDec A} (l1 l2 : list A) : list A :=
+  match l2 with
+  | [] => l1
+  | h :: t => removeList (remove' h l1) t
+  end.
+
+Lemma remove_remove'_eq {A} `{eqDec A} : forall (x : A) (l1 : list A),
+    (forall (y : A), In y (remove eqDecide x l1)) <-> (forall (y : A), In y (remove' x l1)).
+Proof.
+  intros.
+  split.
+  - intros. induction l1.
+    * firstorder.
+    * destruct (eqDecide x a) as [Heq | Heq]; firstorder; intuition.
+      + subst.
+ *)
 
 Lemma In_remove_other {A} `{eqDec A} : forall (x1 x2 : A) (l1 : list A),
     x1 <> x2 -> (In x1 l1 <-> In x1 (remove eqDecide x2 l1)).
@@ -124,22 +153,27 @@ Qed.
 Lemma In_removeList {A} `{eqDec A} : forall (x : A) (l1 l2 : list A),
     In x (removeList l1 l2) <-> In x l1 /\ ~In x l2.
 Proof.
-  split; intros.
+  split; revert x l1.
   - induction l2; simpl; intros.
     * split; intuition. 
     * destruct (eqDecide a x) as [H' | H']; simpl in H0.
-      + rewrite H' in H0.
+      + subst.
+        apply IHl2 in H0.
+        destruct H0 as [H0 H1].
         apply remove_In in H0.
         contradiction.
-      + assert (In x (removeList l1 l2)) as H'' by (apply In_remove_other in H0; intuition).
-        apply IHl2 in H''.
-        destruct H'' as [H'1  H'2].
+      + apply IHl2 in H0.
+        destruct H0 as [H0 H1].
+        apply In_remove_other in H0.
         split; intuition.
-  - destruct H0 as [H0  H1].
-    induction l2; try intuition.
+        congruence.
+  - induction l2; intros; try intuition.
     simpl in *.
     destruct (eqDecide a x) as [H3 | H3]; try intuition.
-    apply In_remove_other; intuition.
+    apply IHl2.
+    split.
+    * apply In_remove_other. congruence. assumption.
+    * assumption.
 Qed.
 
 Global Instance listMinus : Minus.
@@ -149,45 +183,52 @@ simple refine {|
   |}.
 cbn.
 unfold Setminus.
-destruct t; intro H0; apply Extensionality_Ensembles; simpl.
+induction t; intro H0; apply Extensionality_Ensembles; simpl.
 - split; intros; intuition.
 - split.
   * intros x H'. destruct (eqDecide x a) as [H1 | H1].
-    + split; rewrite H1 in H'; apply remove_In in H'; contradiction.
-    + apply In_remove_other in H'; auto.
-      apply In_removeList in H'. destruct H' as [H2 H3].
-      split; try intuition.
-  * intros. destruct H as [H1 H2].
-    assert (a <> x /\ ~In x t) as H3 by (split; firstorder).
-    clear H2.
-    destruct H3 as [H2 H3].    
-    apply In_remove_other; try intuition.
-    apply In_removeList.
-    split; auto.
-Defined.
-
-Lemma nothingInEmpty {A} `{eqDec A}: forall (s : list A), 
+    + split;
+      subst;
+      apply In_removeList in H';
+      destruct H' as [H2 H3];
+      apply remove_In in H2;
+      contradiction.
+    + split.
+      -- apply In_removeList in H'; destruct H' as [H2 H3].
+         apply In_remove_other in H2; assumption.
+      -- intuition.
+         apply In_removeList in H'; destruct H'.
+         contradiction.
+      * intros x H'. apply In_removeList.
+        destruct (eqDecide a x).
+    + subst. intuition.
+    + destruct H' as [H1 H2]. split.
+      -- apply In_remove_other; firstorder.
+      -- firstorder.
+Defined.       
+    
+Lemma nothingInEmpty {A} : forall (s : list A), 
     ⟦ s ⟧ = Empty_set A -> (forall a, ~In a s).
 Proof.  
   intros. simpl in *.
   assert (In a s = (fun a => In a s) a) by reflexivity.
-  unfold not. rewrite H0 in H1.
-  rewrite H1.
+  unfold not. rewrite H in H0.
+  rewrite H0.
   contradiction.
 Qed.
 
-Lemma nothingInNil {A} `{eqDec A} : forall (s : list A),
+Lemma nothingInNil {A} : forall (s : list A),
     (forall a, ~In a s) <-> s = [].
 Proof.
   split; intros.
   - induction s; try reflexivity.
-    assert (~In a (a :: s)) as H1 by (apply H0).
+    assert (~In a (a :: s)) as H1 by (apply H).
     firstorder.
-  - rewrite H0.
+  - rewrite H.
     apply in_nil.
 Qed.
 
-Lemma denotationEmpty {A} `{eqDec A} : forall (s : list A),
+Lemma denotationEmpty {A} : forall (s : list A),
     ⟦ s ⟧ = Empty_set A <-> s = [].
 Proof.
   split; intros.
@@ -216,3 +257,14 @@ Proof.
   subst.
   destruct s'; reflexivity.
 Qed.
+
+Global Instance listBindSearch : BindSearch.
+idtac.
+simple refine {|
+  bindSearch :=
+    (fun (A B : Type) `{eqDec A} (s' s : Space A) (f : A -> Space B) =>
+       search (bind (minus s' s) f))
+|}.
+- intros. apply searchSolution. apply H0.
+- intros. apply searchUninhabited. apply H0.
+Defined.

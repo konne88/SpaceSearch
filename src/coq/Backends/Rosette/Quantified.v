@@ -62,6 +62,7 @@ Parameter rosetteMone  : RosetteInt.
 Parameter rosetteZero  : RosetteInt.
 Parameter rosetteOne   : RosetteInt.
 Parameter rosettePlus  : RosetteInt -> RosetteInt -> RosetteInt.
+Parameter rosetteMinus : RosetteInt -> RosetteInt -> RosetteInt.
 Parameter rosetteEqual : RosetteInt -> RosetteInt -> bool.
 Parameter rosetteLe    : RosetteInt -> RosetteInt -> bool.
 
@@ -70,6 +71,7 @@ Extract Constant rosetteMone  => "-1".
 Extract Constant rosetteZero  => "0".
 Extract Constant rosetteOne   => "1".
 Extract Constant rosettePlus  => "(lambdas (n m) (+ n m))".
+Extract Constant rosetteMinus  => "(lambdas (n m) (- n m))".
 Extract Constant rosetteEqual => "(lambdas (n m) (if (= n m) '(True) '(False)))".
 Extract Constant rosetteLe    => "(lambdas (n m) (if (<= n m) '(True) '(False)))".
 
@@ -84,12 +86,13 @@ Axiom rosetteDenoteMoneOk : ⟦rosetteMone⟧ = -1.
 Axiom rosetteDenoteZeroOk : ⟦rosetteZero⟧ = 0.
 Axiom rosetteDenoteOneOk : ⟦rosetteOne⟧ = 1.
 Axiom rosetteDenotePlusOk : forall n m, ⟦rosettePlus n m⟧ = ⟦n⟧ + ⟦m⟧.
+Axiom rosetteDenoteMinusOk : forall n m, ⟦rosetteMinus n m⟧ = ⟦n⟧ - ⟦m⟧.
 Axiom rosetteDenoteEqualOk : forall n m, rosetteEqual n m = (⟦ n ⟧ =? ⟦ m ⟧).
 Axiom rosetteDenoteLeOk : forall n m, rosetteLe n m = (⟦ n ⟧ <=? ⟦ m ⟧).
 
 Parameter fullInt : Space RosetteInt.
 Axiom denoteFullIntOk : ⟦ fullInt ⟧ = Full_set RosetteInt.
-Extract Constant fullInt => "(lambda (_) 
+Extract Constant fullInt => "(lambda (_)
   (define-symbolic* n integer?)
   n)".
 
@@ -104,12 +107,14 @@ Global Instance rosetteInteger : @Integer rosetteBasic := {|
   zero := rosetteZero;
   one := rosetteOne;
   plus := rosettePlus;
+  minus := rosetteMinus;
   equal := rosetteEqual;
   le := rosetteLe;
   denoteMoneOk := rosetteDenoteMoneOk;
   denoteZeroOk := rosetteDenoteZeroOk;
   denoteOneOk := rosetteDenoteOneOk;
   denotePlusOk := rosetteDenotePlusOk;
+  denoteMinusOk := rosetteDenoteMinusOk;
   denoteEqualOk := rosetteDenoteEqualOk;
   denoteLeOk := rosetteDenoteLeOk
 |}.

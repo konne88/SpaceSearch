@@ -2,25 +2,26 @@
 (define (number->unary n)
   (if (= n 0) '(O) `(S ,(number->unary (- n 1)))))
 
-(define (unary->number n)
-  (match n
-    ((O) 0)
-    ((S n) (add1 (unary->number n)))))
-
-(define (format-solution n s)
+(define ((format-solution s) x y)
   (match s
-    ((Nil) '())
-    ((Cons u s) (let ((x (unary->number u)))
-      (cons (string-append (make-string  x #\.) "*" (make-string (- n x 1) #\.) "\n") (format-solution n s))))))
+    ((Nil) " .")
+    ((Cons xy s) 
+      (if (eq? xy `(Pair ,x ,y)) " *"
+        ((format-solution s) x y)))))
+
+(define (sample w h f)
+  (string-join (for/list ([y h]) 
+    (string-join (for/list ([x w])
+      (f x y)) "")) "\n"))
 
 (define (format-result n r)
   (match r
     ((Uninhabited) "No solution")
-    ((Solution s) (apply string-append (format-solution n s)))))
+    ((Solution s) (sample n n (format-solution s)))))
 
 (define n (string->number (vector-ref (current-command-line-arguments) 0)))
 
 (displayln (string-append "Solving n-queens problem for n = " (~a n)))
 
-(displayln (~a (format-result n (solveNQueens (number->unary n)))))
+(displayln (format-result n (solveNQueens (number->unary n))))
 

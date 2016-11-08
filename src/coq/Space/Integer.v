@@ -15,6 +15,7 @@ Class Integer `{Basic} := {
   zero : Int;
   one : Int;
   plus : Int -> Int -> Int;
+  minus : Int -> Int -> Int;
   equal : Int -> Int -> bool;
   le : Int -> Int -> bool;
 
@@ -22,6 +23,7 @@ Class Integer `{Basic} := {
   denoteZeroOk : ⟦zero⟧ = 0;
   denoteOneOk : ⟦one⟧ = 1;
   denotePlusOk n m : ⟦plus n m⟧ = ⟦n⟧ + ⟦m⟧;
+  denoteMinusOk n m : ⟦minus n m⟧ = ⟦n⟧ - ⟦m⟧;
   denoteEqualOk n m : equal n m = (⟦ n ⟧ =? ⟦ m ⟧);
   denoteLeOk n m : le n m = (⟦ n ⟧ <=? ⟦ m ⟧)
 }.

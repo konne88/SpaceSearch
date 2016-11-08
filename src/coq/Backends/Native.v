@@ -199,8 +199,8 @@ induction t; intro H0; apply Extensionality_Ensembles; simpl.
       -- intuition.
          apply In_removeList in H'; destruct H'.
          contradiction.
-      * intros x H'. apply In_removeList.
-        destruct (eqDecide a x).
+  * intros x H'. apply In_removeList.
+    destruct (eqDecide a x).
     + subst. intuition.
     + destruct H' as [H1 H2]. split.
       -- apply In_remove_other; firstorder.

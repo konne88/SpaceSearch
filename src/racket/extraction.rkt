@@ -19,7 +19,8 @@
   (syntax-rules ()
     [(match e) (error (string-append "Pattern match failed for " (~a e)))]
     [(match e ((t as ...) f) cs ...)
-      (if (eq? 't (car e)) 
-        (curried-apply (lambdas (as ...) f) (cdr e))
-        (match e cs ...))]))
+      (let ((x e))
+        (if (eq? 't (car x)) 
+          (curried-apply (lambdas (as ...) f) (cdr x))
+          (match x cs ...)))]))
 

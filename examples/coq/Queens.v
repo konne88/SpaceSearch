@@ -1,36 +1,26 @@
 Require Import Basic.
-Require Import Rosette.Unquantified.
+Require Import Rosette.Quantified.
 Require Import ListEx.
 Require Import Native.
 Require Import Bool.
 Require Import Arith.EqNat.
+Require Import Integer.
+Require Import EqDec.
 
-Open Scope nat.
+Existing Instance rosetteBasic.
+Existing Instance rosetteSearch.
 
-Fixpoint distance (n m:nat) : nat :=
-  match n, m with
-  | S n, S m => distance n m
-  | O, _ => m
-  | _, O => n
+Definition elem {A} `{eqDec A} (a:A) : list A -> bool :=
+  existsb (fun a' => if a =? a' then true else false).
+
+Fixpoint distinct {A} `{eqDec A} (l:list A) : bool :=
+  match l with
+  | a :: l => andb (negb (elem a l)) (distinct l)
+  | [] => true
   end.
 
-Definition isSafe (x y x' y':nat) : bool :=
-  (beq_nat x x' && beq_nat y y') ||
-  (negb (
-    (beq_nat x x') || (* vertical *)
-    (beq_nat y y') || (* horizontal *)
-    (beq_nat (distance x x') (distance y y')))). (* diagonal *)
-
-Compute (isSafe 0 0 0 0).
-Compute (isSafe 0 1 1 0).
-
-Fixpoint nNat `{Basic} (n:nat) : Space nat :=
-  match n with
-  | 0%nat => empty
-  | S n => union (nNat n) (single n) 
-  end.
-
-Compute (@nNat listSpace 3).
+Definition uncurry {A B C} (f:A->B->C) (ab:A*B) : C :=
+  f (fst ab) (snd ab).
 
 Fixpoint nListSpace `{Basic} {A} (s:Space A) (n:nat) : Space (list A) :=
   match n with
@@ -39,35 +29,29 @@ Fixpoint nListSpace `{Basic} {A} (s:Space A) (n:nat) : Space (list A) :=
           bind s (fun a => single (a :: l)))
   end.
 
-Compute (@nListSpace listSpace nat (nNat 2) 3).
-
-Definition index {A} : list A -> list (A * nat) :=
+Definition index {A} : list A -> list (A * Int) :=
   let fix rec n l :=
     match l with
     | [] => []
-    | a::l => (a,n) :: rec (S n) l
+    | a::l => (a,n) :: rec (plus one n) l
     end 
-  in rec (0 % nat).
+  in rec zero.
 
-Compute (index [false; true]).
+Definition isLegal (queens : list (Int * Int)) : bool :=
+  forallb (fun x => x) [
+    distinct (map fst queens);
+    distinct (map snd queens);
+    distinct (map (uncurry plus) queens);
+    distinct (map (uncurry minus) queens)
+  ].
 
-Existing Instance rosetteSearch.
-
-Definition listToOption {A} (l:list A) : option A :=
-  match l with
-  | [] => None
-  | a::_ => Some a 
-  end.
-
-Definition solveNQueens (n:nat) : Result (list nat) :=
-  search (
-    bind (nListSpace (nNat n) n) (fun xs:list nat =>
-      let ps := index xs in
-      if forallb (fun p =>
-         forallb (fun q => 
-           isSafe (fst p) (snd p) (fst q) (snd q)) ps) ps
-      then single xs 
-      else empty)).
+Definition solveNQueens (n:nat) : Result (list (Int * Int)).
+  refine (search 
+    (bind (nListSpace (range zero (natToInt n)) n)
+      (fun xs:list Int => _))).
+  refine (let ps := index xs in _).
+  refine (if isLegal ps then single ps else empty).
+Defined.
 
 Extraction Language Scheme.
 

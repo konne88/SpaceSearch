@@ -1,4 +1,7 @@
 Require Import Basic.
+Require Import FunctionalExtensionality.
+Require Import Coq.Logic.ClassicalFacts.
+Axiom prop_ext : prop_extensionality.
 
 Section Full.
   Context `{Basic}.
@@ -97,4 +100,19 @@ Section Full.
   Arguments full {_ _}.
 
   Definition all {A B} `{Full A} (q:A -> Space B) := bind full q.
+
+  Lemma denoteAllOk {A B} `{Full A} {f:A -> Space B} : 
+    ⟦ all f ⟧ = ((fun b => exists a, ⟦ f a ⟧ b) : Ensemble B).
+  Proof.
+    unfold all.  
+    rewrite denoteBindOk.
+    rewrite denoteFullOk.
+    rewrite bigUnionIsExists.
+    extensionality b.
+    f_equal.
+    extensionality a.
+    apply prop_ext.
+    rewrite fullIsTrue.
+    intuition.
+  Qed. 
 End Full.

@@ -240,3 +240,136 @@ simple refine {|
 - intros. apply searchSolution. apply H0.
 - intros. apply searchUninhabited. apply H0.
 Defined.
+
+Lemma In_concat {A} : forall (x: A) (ll: list (list A)),
+    In x (concat ll) <-> exists l, (In l ll) /\ (In x l).
+Proof.
+  split.
+  - revert x. induction ll; intros.
+    * contradiction.
+    * simpl in H. apply in_app_or in H. destruct H as [H | H].
+      + exists a. split; intuition.
+      + apply IHll in H. destruct H as [l'].
+        exists l'. destruct H as [H0 H1].
+        split; intuition.
+  - revert x. induction ll; intros.
+    * destruct H as [l']. destruct H as [H0 H1]. contradiction.
+    * simpl. apply in_or_app.
+      simpl in H. destruct H as [l']. destruct H as [H0 H1].
+      destruct H0 as [H0 | H0].
+      + subst. left. assumption.
+      + right. apply IHll. exists l'. split; assumption.
+Qed.
+      
+Theorem denoteBindMinus {A} `{eqDec A} : forall s s' f,
+    ⟦ bind s f ⟧ = Empty_set A -> ⟦ bind (minus s' s) f ⟧ = ⟦ bind s' f ⟧.
+Proof.
+  intros.
+  assert (bind s f = []) by (apply denotationEmpty; assumption).
+  unfold minus. unfold listMinus. unfold bind.
+  apply Extensionality_Ensembles. simpl.
+  split; intros.
+  - apply In_concat in H2. destruct H2 as [l']. destruct H2 as [H2 H3].
+    apply In_concat. exists l'. split; try assumption.
+    apply in_map_iff. apply in_map_iff in H2.
+    destruct H2 as [x']. destruct H2 as [H2' H2''].
+    exists x'. apply In_removeList in H2''. destruct H2''. split; assumption.
+  - apply In_concat in H2. destruct H2 as [l']. destruct H2 as [H2 H3].
+    apply in_map_iff in H2. destruct H2 as [x']. destruct H2 as [H4 H5].
+    apply In_concat. exists l'. split; try assumption.
+    apply in_map_iff. exists x'. split; try assumption.
+    apply In_removeList. split; try assumption.
+    intro H'.
+    simpl in H1.
+    assert (In l' (f <$> s)) by (apply in_map_iff; exists x'; split; assumption).
+    assert (In x (bind s f)) by (apply In_concat; exists l'; split; assumption).
+    simpl in H6.
+    rewrite H1 in H6.
+    contradiction.
+Qed.
+
+Lemma concat_empty {A} : forall (ll : list (list A)),
+    concat ll = [] <-> (forall l, In l ll -> l = []).
+Proof.
+  split.
+  - intros. induction ll.
+    * contradiction.
+    * inversion H. apply app_eq_nil in H2. destruct H2 as [H2 H3].
+      rewrite H2 in *. rewrite H3 in *.
+      simpl in H. simpl in H0.
+      destruct H0.
+      + intuition.
+      + simpl. apply IHll; intuition.
+  - intros. induction ll.
+    * auto.
+    * assert (In a (a :: ll)) by intuition.
+      assert (a = []) by (apply H; assumption).
+      rewrite H1; simpl.
+      apply IHll.
+      intros.
+      apply H. rewrite H1. simpl.
+      right. assumption.
+Qed.
+
+Lemma removeList_empty {A} `{eqDec A} : forall s,
+    removeList [] s = [].
+Proof. induction s; intuition. Qed.
+
+Lemma removeList_step_in {A} `{eqDec A} : forall e s' s,
+    In e s -> removeList (e :: s') s = removeList s' s.
+Proof.
+  intros e s' s. revert e s'. induction s; intros.
+  - contradiction.
+  - destruct (eqDecide e a) as [H1 | H1].
+    * rewrite H1. simpl.
+      destruct (eqDecide a a); intuition.
+    * destruct H0; try firstorder.
+      assert (removeList (e :: s') s = removeList s' s)
+        by (apply IHs; assumption).
+      simpl.
+      destruct (eqDecide a e); try intuition.
+Qed.
+
+Lemma removeList_step_not_in {A} `{eqDec A}: forall e s' s,
+    ~In e s -> removeList (e :: s') s = e :: removeList s' s.
+Proof.
+  intros e s' s. revert e s'. induction s; intros.
+  - reflexivity.
+  - simpl. destruct (eqDecide a e).
+    * firstorder.
+    * rewrite IHs; intuition.
+Qed.
+
+Theorem bindMinus {A} `{eqDec A} : forall s' s f,
+    ⟦ bind s f ⟧ = Empty_set A -> bind (minus s' s) f = bind s' f.
+Proof.
+  unfold minus. unfold listMinus. unfold bind. simpl.
+  intros.
+  assert (bind s f = []) as H' by (apply denotationEmpty; assumption).
+  simpl in H'.
+  assert (forall l, In l (f <$> s) -> l = []) by (apply concat_empty; assumption).
+  assert (forall e, In e s -> f e = []) by (
+    intros;
+    assert (In (f e) (f <$> s)) by
+        (apply in_map_iff; exists e; split; intuition);
+    apply H1;
+    assumption).
+  induction s'.      
+  - simpl. rewrite removeList_empty. reflexivity.
+  - simpl. rewrite <- IHs'.
+    destruct (in_dec eqDecide a s).
+    + assert (f a = []) by (apply H2; assumption).
+      rewrite H3. simpl.
+      rewrite removeList_step_in; intuition.
+    + rewrite removeList_step_not_in; intuition.
+Qed.
+
+Corollary bindSearchEquiv {A} `{eqDec A} :
+  forall (s' s : Space A) (f : A -> Space A),
+    ⟦ bind s f ⟧ = Empty_set A -> bindSearch s' s f = search (bind s' f).
+Proof.
+  intros.
+  unfold bindSearch. unfold listBindSearch. unfold search. unfold listSearch.
+  rewrite bindMinus; try assumption.
+  reflexivity.
+Qed.

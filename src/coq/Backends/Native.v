@@ -3,7 +3,7 @@ Require Import Basic.
 Require Import Minus.
 Require Import EqDec.
 Require Import Precise.
-Require Import Bind.
+Require Import Incremental.
 
 Export ListEx.
 
@@ -332,10 +332,10 @@ Proof.
     + rewrite removeList_step_not_in; intuition.
 Qed.
 
-Global Instance listBindSearch : BindSearch.
+Global Instance listIncSearch : IncSearch.
 idtac.
 simple refine {|
-  bindSearch :=
+  incSearch :=
     (fun (A B : Type) `{eqDec A} (s' s : Space A) (f : A -> Space B) =>
        search (bind (minus s' s) f))
 |}.
@@ -343,12 +343,12 @@ simple refine {|
 - intros. apply searchUninhabited. apply H0.
 Defined.
 
-Corollary bindSearchEquiv {A} `{eqDec A} :
+Corollary incSearchEquiv {A} `{eqDec A} :
   forall (s' s : Space A) (f : A -> Space A),
-    ⟦ bind s f ⟧ = Empty_set A -> bindSearch s' s f = search (bind s' f).
+    ⟦ bind s f ⟧ = Empty_set A -> incSearch s' s f = search (bind s' f).
 Proof.
   intros.
-  unfold bindSearch. unfold listBindSearch. unfold search. unfold listSearch.
+  unfold incSearch. unfold listIncSearch. unfold search. unfold listSearch.
   rewrite bindMinus; try assumption.
   reflexivity.
 Qed.

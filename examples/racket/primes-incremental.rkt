@@ -17,4 +17,4 @@
    (string-append "Searching for primes for n even numbers after 2 (after we add 3), n = "
       (~a n)))
 
-(displayln (format-result n (testBindSearch (number->unary n))))
+(displayln (format-result n (testIncSearch (number->unary n))))

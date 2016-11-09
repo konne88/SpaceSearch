@@ -33,10 +33,6 @@ examples: build
 	tail -n +4 $(EXA_COQ)/primes-naive.scm >> primes-naive.rkt
 	cat $(EXA_RKT)/primes-naive.rkt >> primes-naive.rkt
 
-	cp $(EXA_RKT)/header.rkt primes-incremental.rkt
-	tail -n +4 $(EXA_COQ)/primes-incremental.scm >> primes-incremental.rkt
-	cat $(EXA_RKT)/primes-incremental.rkt >> primes-incremental.rkt
-
 	cp $(EXA_RKT)/header.rkt primes-bind.rkt
 	tail -n +4 $(EXA_COQ)/primes-bind.scm >> primes-bind.rkt
 	cat $(EXA_RKT)/primes-bind.rkt >> primes-bind.rkt
@@ -56,5 +52,5 @@ clean:
           -name "*~" \
         \) -exec rm -f {} +
 	find . -name .coq-native -o -name compiled -exec rm -r {} +
-	rm -f $(EXA_COQ)/Makefile $(SRC_COQ)/Makefile queens.rkt integer-tests.rkt parallel-test.rkt src/racket/worker.rkt
+	rm -f $(EXA_COQ)/Makefile $(SRC_COQ)/Makefile queens.rkt integer-tests.rkt parallel-test.rkt primes-*.rkt src/racket/worker.rkt
 

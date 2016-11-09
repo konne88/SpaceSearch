@@ -1,7 +1,6 @@
 Require Import Basic.
 Require Import EqDec.
 Require Import Minus.
-Require Import Incremental.
 Require Import Bind.
 Require Import ListEx.
 Require Import Rosette.Unquantified.
@@ -79,16 +78,6 @@ Definition primeSearch (n : nat) : Result nat :=
 Extraction Language Scheme.
 
 Extraction "primes-naive" primeSearch.
-
-Definition primeIncSearch `{eqDec nat} (n : nat) : Result nat :=
-  let evens := evenSpace n in
-  incSearch
-    (bind (union evens (single 3)) testSpace)
-    (bind evens testSpace).
-
-Extraction Language Scheme.
-
-Extraction "primes-incremental" primeIncSearch.
 
 Definition primeBindSearch `{eqDec nat} (n : nat) : Result nat :=
   let evens := evenSpace n in

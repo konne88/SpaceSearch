@@ -3,7 +3,6 @@ Require Import Basic.
 Require Import Minus.
 Require Import EqDec.
 Require Import Precise.
-Require Import Incremental.
 Require Import Bind.
 
 Export ListEx.
@@ -209,37 +208,6 @@ Proof.
     apply Extensionality_Ensembles.
     firstorder.
 Qed.
-    
-Global Instance listIncSearch : IncSearch.
-idtac.
-simple refine {|
-  incSearch := (fun (A: Type) `{eqDec A} (s' s : Space A) => search (minus s' s))
-       |};
-  destruct s'; intros;
-    assert (s = []) as H' by (apply denotationEmpty; assumption);
-    subst; simpl in *;
-    try intuition; try (inversion H0; auto).
-Defined.
-
-Theorem incSearchEquiv {A} `{eqDec A} : forall s s',
-    ⟦ s ⟧ = Empty_set A -> search s' = incSearch s' s.
-Proof.
-  intros.
-  assert (s = []) by (apply denotationEmpty; assumption).
-  subst.
-  destruct s'; reflexivity.
-Qed.
-
-Global Instance listBindSearch : BindSearch.
-idtac.
-simple refine {|
-  bindSearch :=
-    (fun (A B : Type) `{eqDec A} (s' s : Space A) (f : A -> Space B) =>
-       search (bind (minus s' s) f))
-|}.
-- intros. apply searchSolution. apply H0.
-- intros. apply searchUninhabited. apply H0.
-Defined.
 
 Lemma In_concat {A} : forall (x: A) (ll: list (list A)),
     In x (concat ll) <-> exists l, (In l ll) /\ (In x l).
@@ -363,6 +331,17 @@ Proof.
       rewrite removeList_step_in; intuition.
     + rewrite removeList_step_not_in; intuition.
 Qed.
+
+Global Instance listBindSearch : BindSearch.
+idtac.
+simple refine {|
+  bindSearch :=
+    (fun (A B : Type) `{eqDec A} (s' s : Space A) (f : A -> Space B) =>
+       search (bind (minus s' s) f))
+|}.
+- intros. apply searchSolution. apply H0.
+- intros. apply searchUninhabited. apply H0.
+Defined.
 
 Corollary bindSearchEquiv {A} `{eqDec A} :
   forall (s' s : Space A) (f : A -> Space A),

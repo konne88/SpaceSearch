@@ -109,34 +109,6 @@ Fixpoint removeList {A} `{eqDec A} (l1 l2 : list A) : list A :=
   | h :: t => removeList (remove eqDecide h l1) t
   end.
 
-
-(*
-Definition remove' {A} `{eqDec A} (x : A) (l : list A) : list A :=
-  let aux := (fix look x l acc :=
-                match l with
-                | [] => acc
-                | h :: t => if eqDecide h x then look x t acc
-                            else look x t (h :: acc)
-                end) in
-  aux x l [].
-
-Fixpoint removeList {A} `{eqDec A} (l1 l2 : list A) : list A :=
-  match l2 with
-  | [] => l1
-  | h :: t => removeList (remove' h l1) t
-  end.
-
-Lemma remove_remove'_eq {A} `{eqDec A} : forall (x : A) (l1 : list A),
-    (forall (y : A), In y (remove eqDecide x l1)) <-> (forall (y : A), In y (remove' x l1)).
-Proof.
-  intros.
-  split.
-  - intros. induction l1.
-    * firstorder.
-    * destruct (eqDecide x a) as [Heq | Heq]; firstorder; intuition.
-      + subst.
- *)
-
 Lemma In_remove_other {A} `{eqDec A} : forall (x1 x2 : A) (l1 : list A),
     x1 <> x2 -> (In x1 l1 <-> In x1 (remove eqDecide x2 l1)).
 Proof.

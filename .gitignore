@@ -13,3 +13,6 @@ src/racket/worker.rkt
 /integer-tests.rkt
 /parallel-test.rkt
 /queens.rkt
+/primes-naive.rkt
+/primes-incremental.rkt
+/primes-bind.rkt

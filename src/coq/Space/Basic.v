@@ -15,7 +15,7 @@ Class Basic := {
   single {A} : A -> Space A;
   union {A} : Space A -> Space A -> Space A;
   bind {A B} : Space A -> (A -> Space B) -> Space B;
-
+  
   denoteEmptyOk {A} : ⟦ empty ⟧ = Empty_set A;
   denoteSingleOk {A a} : ⟦ single a ⟧ = Singleton A a;
   denoteUnionOk {A s t} : ⟦ union s t ⟧ = Union A ⟦ s ⟧ ⟦ t ⟧;

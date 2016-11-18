@@ -3,8 +3,12 @@
 
 ### Getting Started with SpaceSearch
 
-SpaceSearch is a Coq library that enables the verification of solver aided
-tools. 
+Many effective verification tools build on automated solvers. These tools reduce
+problems in an application domain (ranging from data-race detection to compiler
+optimization validation) to the domain of a highly optimized solver like Z3.
+However, this reduction is rarely formally verified in practice, leaving the
+end-to-end soundness of the tool in question.  SpaceSearch is a library to
+verify such tools by means of a proof assistant. 
 
 [Docker][docker] is the most reliable way to build SpaceSearch. To build
 SpaceSearch and all its dependencies run (running this command for the first time

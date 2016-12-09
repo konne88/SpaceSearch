@@ -13,14 +13,14 @@ Section Full.
 
   Arguments full _ {_}.
 
-  Instance fullEmpty : Full Datatypes.Empty_set.
+  Global Instance fullEmpty : Full Datatypes.Empty_set.
     refine {| full := empty |}.
   Proof.
     apply Extensionality_Ensembles'.
     intros [].
   Defined.
 
-  Instance fullUnit : Full unit.
+  Global Instance fullUnit : Full unit.
     refine {| full := single tt |}.
   Proof.
     apply Extensionality_Ensembles'.
@@ -31,7 +31,7 @@ Section Full.
     intuition.
   Defined.
   
-  Instance fullBool : Full bool. 
+  Global Instance fullBool : Full bool. 
     refine {|
       full := union (single true) (single false)
     |}.
@@ -45,7 +45,7 @@ Section Full.
     intros []; firstorder.
   Defined.
 
-  Instance fullProd {A B} `{@Full A} `{@Full B} : @Full (A * B).
+  Global Instance fullProd {A B} `{@Full A} `{@Full B} : @Full (A * B).
     refine {|
       full := bind (full A) (fun a => 
               bind (full B) (fun b =>
@@ -70,7 +70,7 @@ Section Full.
     constructor.
   Defined.
 
-  Instance fullSigT {A B} `{Full A} 
+  Global Instance fullSigT {A B} `{Full A} 
                           `{forall a:A, Full (B a)} : 
                             Full {a : A & B a}.
     refine {|

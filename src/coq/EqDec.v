@@ -30,7 +30,7 @@ Global Instance eqDecProd {A B} `{eqDec A} `{eqDec B} : eqDec (A * B).
   constructor; repeat decide equality; apply eqDecide.
 Defined.
 
-Instance eqDecSigT {A B} `{eqDec A} `{forall a:A, eqDec (B a)} : eqDec {a:A & B a}.
+Global Instance eqDecSigT {A B} `{eqDec A} `{forall a:A, eqDec (B a)} : eqDec {a:A & B a}.
   constructor. intros x x'. 
   destruct x.
   destruct x'.
@@ -45,4 +45,46 @@ Instance eqDecSigT {A B} `{eqDec A} `{forall a:A, eqDec (B a)} : eqDec {a:A & B 
   - right. 
     injection.
     congruence.
+Defined.
+
+Global Instance eqDecSigT' {A B} `{eqDec A} `{forall a:A, eqDec (B a)} : eqDec (sigT B).
+  apply eqDecSigT.
+Defined.
+
+Global Instance eqDecSum {A B} `{eqDec A} `{eqDec B} : eqDec (A + B).
+  constructor.
+  decide equality; apply eqDecide.
+Defined.
+
+Global Instance eqDecList {A} `{eqDec A} : eqDec (list A).
+  constructor.
+  intros.
+  apply list_eq_dec.
+  apply eqDecide.
+Defined.
+
+Global Instance eqDecBool : eqDec bool.
+  constructor.
+  decide equality.
+Defined.
+
+Global Instance eqDecUnit : eqDec unit.
+  constructor.
+  decide equality.
+Defined.
+
+Global Instance eqDecZ : eqDec Z.
+  constructor.
+  decide equality;
+  decide equality.
+Defined.
+
+Global Instance eqDecAscii : eqDec ascii.
+  constructor.
+  apply ascii_dec.
+Defined.
+
+Global Instance eqDecString : eqDec string.
+  constructor.
+  apply string_dec.
 Defined.

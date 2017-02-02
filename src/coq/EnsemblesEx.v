@@ -34,6 +34,15 @@ Lemma fullIsTrue {A} : Full_set A = (fun _ => True).
   split; intros ? []; constructor.
 Qed.
 
+Lemma fullForAll {A} {s : Ensemble A} : s = Full_set A <-> (forall a : A, s a).
+  constructor.
+  - intros Hfull a. rewrite Hfull. constructor.
+  - intros Ha. apply Extensionality_Ensembles.
+    simpl. constructor.
+    + intros a _. constructor.
+    + intros a _. firstorder.
+Qed.
+
 Lemma bigUnionIsExists {A B s f} : BigUnion A B s f = (fun b => exists a, s a /\ f a b).
   apply Extensionality_Ensembles.
   simpl.

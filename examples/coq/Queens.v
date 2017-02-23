@@ -13,6 +13,7 @@ Require Import Bool.
 Require Import Logic.Classical_Pred_Type.
 Require Import Logic.Classical_Prop.
 Require Import Permutation.
+Require Import Coq.Sorting.Mergesort.
 
 Existing Instance rosetteBasic.
 Existing Instance rosetteSearch.
@@ -958,17 +959,510 @@ Proof.
   apply permutationNoCollisions with (map denoteIntTuple l1); intuition.
 Qed.
 
+Lemma permutationCorrect : forall (l1 l2 : list (Int*Int)) (n : nat),
+    Permutation l1 l2
+    -> correct n (map denoteIntTuple l1) -> correct n (map denoteIntTuple l2).
+Proof.
+  unfold correct. unfold allInBounds.
+  intros.
+  destruct H0.
+  destruct H1.
+  assert (Permutation (map denoteIntTuple l1) (map denoteIntTuple l2))
+    by (apply Permutation_map; assumption).
+  assert (length (map denoteIntTuple l1) = length (map denoteIntTuple l2))
+    by (apply Permutation_length; assumption).
+  split; [| split].
+  * intuition.
+  * intros.
+    rewrite <- H4.
+    apply H1.
+    apply Permutation_in with (l := map denoteIntTuple l2); try assumption.
+    apply Permutation_sym. assumption.
+  * apply permutationNoCollisions with (l1 := map denoteIntTuple l1);
+      assumption.
+Qed.    
+
+Lemma permutationCorrect' : forall (l1 l2 : list (Z*Z)) (n : nat),
+    Permutation l1 l2 -> correct n l1 -> correct n l2.
+Proof.
+  unfold correct. unfold allInBounds.
+  intros.
+  destruct H0. destruct H1.
+  assert (length l1 = length l2) by (apply Permutation_length; assumption).
+  rewrite H3 in H0.
+  split; try assumption.
+  apply permutationNoCollisions with (l2 := l2) in H2; [| assumption].
+  split; try assumption.
+  rewrite <- H3.
+  intros.
+  apply Permutation_in with (l' := l1) in H4;
+    [| apply Permutation_sym; assumption].
+  apply H1; assumption.
+Qed.
+
+Definition zToInt (z : Z) : Int. Admitted.
+
+Lemma zToIntOk : forall (z : Z), ⟦ zToInt z ⟧ = z. Admitted.
+
+Lemma zToIntZeroOk : zToInt 0 = zero.
+  apply denoteInjective.
+  rewrite denoteZeroOk.
+  apply zToIntOk.
+Qed.
+
+Lemma zToIntOneOk : zToInt 1 = one.
+  apply denoteInjective.
+  rewrite denoteOneOk.
+  apply zToIntOk.
+Qed.
+
+Lemma zToIntPlusOk : forall (i j : Z), zToInt (i + j) = plus (zToInt i) (zToInt j).
+  intros.
+  apply denoteInjective.
+  rewrite denotePlusOk.
+  do 3 (rewrite zToIntOk).
+  reflexivity.
+Qed.
+
+Lemma zToIntEqualOk : forall (i j : Z),
+    equal (zToInt i) (zToInt j) = Z.eqb i j.
+Proof.
+  intros.
+  rewrite denoteEqualOk.
+  do 2 (rewrite zToIntOk).
+  reflexivity.
+Qed.
+
+Lemma zToIntLeOk : forall (i j : Z),
+    le (zToInt i) (zToInt j) = Z.leb i j.
+Proof.
+  intros.
+  rewrite denoteLeOk.
+  do 2 (rewrite zToIntOk).
+  reflexivity.
+Qed.
+
+Definition zTupleToIntTuple (p : Z*Z) : (Int*Int) :=
+  let '(x, y) := p in (zToInt x, zToInt y).
+
+Module Import ZOrder := OTF_to_TTLB Z.
+Module Import ZSort := Sort ZOrder.
+
+Module ZZOrder <: TotalLeBool.
+  Definition t : Set := (Z*Z).
+  Definition leb (x y : t) : bool := ZOrder.leb (snd x) (snd y).
+  Theorem leb_total : forall (x y : t), leb x y = true \/ leb y x = true.
+    intros. destruct x. destruct y.
+    unfold leb. simpl.
+    apply ZOrder.leb_total.
+  Qed.
+End ZZOrder.
+Module Import ZZSort := Sort ZZOrder.
+
+Lemma indexPreservesFst {A} : forall (l : list A), (map fst (index l)) = l.
+  unfold index.
+  assert (forall l' i,
+             map fst 
+                 ((fix rec (n : Int) (l0 : list A) {struct l0} :=
+                    match l0 with
+                    | [] => []
+                    | a :: l1 => (a, n) :: rec (plus one n) l1
+                    end) i l') = l').
+  * intro l'. induction l'; intros; try intuition.
+    simpl. rewrite IHl'. reflexivity.
+  * intros. rewrite H. reflexivity.
+Qed.
+
+Fixpoint countUp (n : nat) (start : Int) : list Int :=
+  match n with
+  | S n' => start :: countUp n' (plus one start)
+  | O => []
+  end.
+
+Lemma sndIndexCountsUp {A} : forall (l : list A) (n : nat),
+    length l = n -> map snd (index l) = countUp n zero.
+Proof.
+  unfold index.
+  assert (forall (l' : list A) (n' : nat) (i : Int),
+             length l' = n' ->
+             map snd ((fix rec (n0 : Int) (l0 : list A) {struct l0} :=
+                         match l0 with
+                         | [] => []
+                         | a :: l1 => (a, n0) :: rec (plus one n0) l1
+                         end) i l') = countUp n' i).
+  * intro l'. induction l'; intros.
+    + simpl in H. subst. reflexivity.
+    + simpl. simpl in H. destruct n'; inversion H.
+      rewrite IHl' with (n' := n'); [| assumption].
+      rewrite H1. intuition.
+  * intros. rewrite H with (n' := n); [| assumption].
+    reflexivity.
+Qed.
+      
+Lemma sndIndex {A} : forall (l : list (A*Int)) (n : nat),
+    length l = n -> map snd l = countUp n zero -> index (map fst l) = l.
+Proof.
+  unfold index.
+  assert (forall (l' : list (A * Int)) (n' : nat) (i : Int),
+             length l' = n' ->
+             map snd l' = countUp n' i ->
+             (fix rec (n0 : Int) (l0 : list A) {struct l0} :=
+                match l0 with
+                | [] => []
+                | a :: l1 => (a, n0) :: rec (plus one n0) l1
+                end) i (map fst l') = l').
+  * intro l'. induction l'; intros; try reflexivity.
+    destruct n'; inversion H.
+    simpl in H0. inversion H0.
+    simpl. rewrite IHl' with (n' := n'); try assumption.
+    destruct a; reflexivity.
+  * intros. rewrite H with (n' := n); intuition.
+Qed.    
+
+Lemma intToZInvolutive : forall (p : Z*Z),
+    denoteIntTuple (zTupleToIntTuple p) = p.
+Proof.
+  intros. destruct p. simpl.
+  do 2 (rewrite zToIntOk).
+  reflexivity.
+Qed.
+
+Lemma intToZInvolutiveMap : forall (l : list (Z*Z)),
+    map denoteIntTuple (map zTupleToIntTuple l) = l.
+Proof.
+  intros.
+  induction l.
+  * reflexivity.
+  * simpl. rewrite intToZInvolutive.
+    simpl in IHl. rewrite IHl.
+    reflexivity.
+Qed.
+
+Lemma intSndToZSnd : forall (l : list (Z*Z)),
+    map snd (map zTupleToIntTuple l) = map zToInt (map snd l).
+Proof.
+  intros.
+  induction l; try reflexivity.
+  simpl. simpl in IHl. rewrite IHl.
+  destruct a. simpl. reflexivity.
+Qed.
+
+Lemma zToIntInj : forall (z1 z2 : Z),
+    zToInt z1 = zToInt z2 -> z1 = z2.
+Proof.
+  intros.
+  rewrite <- (zToIntOk z1).
+  rewrite <- (zToIntOk z2).
+  rewrite H. reflexivity.
+Qed.
+
+Lemma zToIntMapInj : forall (l1 l2 : list Z),
+    map zToInt l1 = map zToInt l2 -> l1 = l2.
+Proof.
+  intro l1. induction l1; intros.
+  * simpl in H. destruct l2; try inversion H. reflexivity.
+  * simpl in H. destruct l2; try inversion H.
+    apply IHl1 in H2. apply zToIntInj in H1. subst.
+    reflexivity.
+Qed.
+
+Lemma zToIntMapBij : forall (l1 l2 : list Z),
+    map zToInt l1 = map zToInt l2 <-> l1 = l2.
+Proof.
+  intros. split; intros.
+  * apply zToIntMapInj; assumption.
+  * rewrite H. reflexivity.
+Qed.
+
+Lemma zToIntInv : forall (i : Int), zToInt ⟦ i ⟧ = i.
+  intros.
+  apply denoteInjective.
+  rewrite zToIntOk.
+  reflexivity.
+Qed.  
+
+Fixpoint zCountUp (n : nat) (start : Z) : list Z :=
+  match n with
+  | S n' => start :: zCountUp n' (1 + start)
+  | O => []
+  end.
+
+Lemma countUpToZCountUp : forall (n : nat) (start : Int),
+    countUp n start = map zToInt (zCountUp n ⟦ start ⟧).
+Proof.
+  intro n. induction n; intros.
+  * reflexivity.
+  * unfold countUp. rewrite IHn. unfold zCountUp.
+    rewrite rosetteDenotePlusOk.
+    replace (@denote RosetteInt Z rosetteDenotationInt
+                     (@one rosetteBasic rosetteInteger))
+    with (@denote RosetteInt Z rosetteDenotationInt rosetteOne);
+      [| intuition].
+    rewrite rosetteDenoteOneOk. simpl.
+    rewrite zToIntInv.
+    reflexivity.
+Qed.
+
+Lemma sortedBySecond : forall (l : list (Z*Z)),
+    Sorted.LocallySorted (fun p1 p2 => is_true (leb (snd p1) (snd p2))) l
+    -> Sorted.LocallySorted (fun z1 z2 => is_true (leb z1 z2)) (map snd l).
+Proof.
+  intros; induction H; simpl; constructor; try assumption.
+Qed.
+
+Lemma ZofSucc : forall (n : nat), Z.of_nat (S n) = 1 + Z.of_nat n.
+  intros. induction n.
+  * simpl. reflexivity.
+  * unfold Z.of_nat. do 2 (rewrite Zpos_P_of_succ_nat).
+    rewrite IHn. omega.
+Qed.
+
+Lemma sortedListAllGreater : forall (l : list Z) (a : Z),
+    Sorted.Sorted (fun z1 z2 => is_true (leb z1 z2)) l
+    -> Sorted.HdRel (fun z1 z2 : Z => is_true (leb z1 z2)) a l
+    -> (forall z, In z l -> a <= z).
+Proof.
+  intros l a H. revert a. induction H; intros.
+  * inversion H0.
+  * assert (forall z, In z l -> a <= z) by (apply IHSorted; assumption).
+    apply Sorted.HdRel_inv in H1.
+    apply leb_le in H1.
+    apply Z.compare_ngt_iff in H1.
+    assert (a0 <= a) by omega.
+    destruct H2; try omega.
+    apply H3 in H2. omega.
+Qed.    
+    
+Theorem sortDistinctListRangeGeneral : forall (l : list Z) (n : nat) (i : Z),
+    Sorted.LocallySorted (fun z1 z2 => is_true (leb z1 z2)) l
+    -> length l = n
+    -> distinct' l -> (forall z, In z l -> i <= z < i + Z.of_nat n)
+    -> l = zCountUp n i.
+Proof.
+  intros l n i H. revert n i.
+  induction H; intros.
+  * simpl in H. rewrite <- H. reflexivity.
+  * simpl in H. rewrite <- H. simpl.
+    rewrite <- H in H1. simpl in H1.
+    assert (i <= a < i + 1) by (apply H1; intuition).
+    assert (a = i) by omega.
+    rewrite H3. reflexivity.
+  * assert (distinct' (b :: l))
+      by (apply distinctCons with (a0 := a); assumption).
+    destruct n; inversion H1.
+    destruct n; inversion H6.
+    assert (length (b :: l) = S n) by intuition.
+    assert (a <= b)
+      by (apply leb_le in H0; apply Z.compare_ngt_iff in H0; omega).
+    assert (i <= a) by (apply H3; intuition).
+    apply Sorted.Sorted_LocallySorted_iff in H.
+    assert (Sorted.HdRel (fun z1 z2 : Z => is_true (leb z1 z2)) a (b :: l))
+      by (apply Sorted.HdRel_cons; assumption).
+    assert (a <> b) by
+        (unfold distinct' in H2;
+         assert (distinctIndices 0 1 (a :: b :: l)) by (split; omega);
+         apply H2 with (d := 0) in H11;
+         simpl in H11;
+         assumption).
+    apply Z.le_lteq in H8.
+    destruct H8; try contradiction.
+    assert (i + 1 <= b) by omega.
+    assert (is_true (leb (i + 1) b))
+      by (apply leb_le; apply Z.compare_ngt_iff; omega).
+    apply Sorted.HdRel_cons with (a := i + 1) (b := b) (l := l) in H13.
+    assert (forall z, In z (b :: l) -> i + 1 <= z)
+      by (apply sortedListAllGreater; assumption).
+    assert (forall z, In z (b :: l) -> i + 1 <= z < i + 1 + Z.of_nat (S n))
+      by (intros; split; try (intuition; omega);
+          assert (In z (a :: b :: l)) by intuition;
+          apply H3 in H16; rewrite ZofSucc in H16; omega).
+    assert (b :: l = zCountUp (S n) (i + 1))
+           by (apply IHLocallySorted; assumption).
+    rewrite H6.
+    assert (zCountUp (S (S n)) i = i :: zCountUp (S n) (i + 1))
+      by (assert (i + 1 = 1 + i) by omega; rewrite H17; intuition).
+    rewrite H17. rewrite <- H16.
+    assert (b = i + 1) by (inversion H16; intuition).
+    assert (a = i) by omega.
+    rewrite H19.
+    reflexivity.
+Qed.    
+    
+Lemma sortDistinctListRange : forall (l : list Z) (n : nat),
+    length l = n
+    -> distinct' l -> (forall z, In z l -> 0 <= z < Z.of_nat n)
+    -> Sorted.LocallySorted (fun z1 z2 => is_true (leb z1 z2)) l
+    -> l = zCountUp n 0.
+Proof.
+  intros. apply sortDistinctListRangeGeneral; assumption.
+Qed.
+      
+Lemma sortedIndex : forall (p : list (Z*Z)) (n : nat),
+    correct n p ->
+    map zTupleToIntTuple (sort p)
+    = index (map fst (map zTupleToIntTuple (sort p))).
+Proof.
+  intros.
+  assert (Permutation p (sort p)) by (apply Permuted_sort).
+  destruct H. destruct H1.
+  apply noCollisionsIffDistinct in H2.
+  unfold allInBounds in H1. unfold inBounds in H1.
+  rewrite sndIndex with (n0 := n).
+  * reflexivity.
+  * rewrite map_length. rewrite <- H.
+    apply Permutation_length. apply Permutation_sym.
+    assumption.
+  * rewrite intSndToZSnd. rewrite countUpToZCountUp. rewrite zToIntMapBij.
+    replace (@denote (@Int rosetteBasic rosetteInteger) Z rosetteDenotationInt
+                     (@zero rosetteBasic rosetteInteger))
+    with (@denote RosetteInt Z rosetteDenotationInt rosetteZero);
+      [| intuition].
+    rewrite rosetteDenoteZeroOk.
+    destruct H2. destruct H3.
+    assert (Sorted.LocallySorted
+              (fun p1 p2 => is_true (leb (snd p1) (snd p2))) (sort p))
+      by apply Sorted_sort.
+    apply sortedBySecond in H5.
+    assert (Permutation (map snd p) (map snd (sort p)))
+      by (apply Permutation_map; assumption).
+    assert (distinct' (map snd (sort p)))
+      by (apply distinctPermutation with (l1 := map snd p); assumption).
+    assert (length (map snd (sort p)) = n)    
+      by (rewrite <- H; rewrite map_length; apply Permutation_length;
+          apply Permutation_sym; intuition).
+    apply sortDistinctListRange; try assumption.
+    intros. apply in_map_iff in H9. do 2 (destruct H9).
+    apply Permutation_in with (l' := p) in H10;
+      [| apply Permutation_sym; assumption].
+    apply H1 in H10.
+    destruct x. simpl in H9. rewrite <- H9. 
+    intuition.
+Qed.
+
+Lemma inRangeIfInBounds : forall (z : Z) (n : nat),
+    0 <= z < Z.of_nat n -> Ensembles.In ⟦ range zero (natToInt n) ⟧ (zToInt z).
+Proof.
+  intros.
+  unfold range.
+  rewrite denoteBindOk.
+  rewrite bigUnionIsExists.
+  exists (zToInt z).
+  split.
+  * rewrite denoteFullOk. constructor.
+  * unfold lt.
+    do 2 (rewrite denoteLeOk). rewrite denoteZeroOk.
+    rewrite denoteEqualOk.
+    rewrite zToIntOk.
+    rewrite denoteNatToInt.    
+    assert ((0 <=? z) && ((z <=? Z.of_nat n)
+                            && negb (Z.eqb z (Z.of_nat n))) = true).
+    apply andb_true_iff.
+    split; [| apply andb_true_iff; split].
+    + destruct H. apply Z.leb_le. assumption.
+    + apply Z.leb_le. omega.
+    + apply negb_true_iff. apply Z.eqb_neq. omega.
+    + rewrite H0. rewrite denoteSymbolicSingleOk.
+      constructor.
+Qed.
+
+Lemma lengthZeroMeansEmpty {A} : forall (l : list A),
+    length l = 0%nat -> l = [].
+Proof.
+  intros.
+  destruct l.
+  * reflexivity.
+  * inversion H.
+Qed.
+
+Lemma inNListSpaceIfInSpace {A} : forall (l : list A) (s : Space A) (n : nat),
+    length l = n ->
+    (forall a, In a l -> Ensembles.In ⟦ s ⟧ a) -> Ensembles.In ⟦ nListSpace s n ⟧ l.
+Proof.
+  intro l. induction l; intros.
+  * simpl in H. rewrite <- H.
+    unfold nListSpace. rewrite denoteSymbolicSingleOk.
+    simpl. constructor.
+  * simpl in H.
+    destruct n; inversion H.
+    unfold nListSpace.
+    rewrite denoteSymbolicBindOk.
+    rewrite bigUnionIsExists.
+    assert (forall a0 : A, In a0 l -> Ensembles.In ⟦ s ⟧ a0)
+      by (intros; apply H0; simpl; right; assumption).
+    exists l.
+    split.
+    + apply IHl; intuition.
+    + rewrite denoteSymbolicBindOk.
+      rewrite bigUnionIsExists.
+      exists a.
+      split.
+      - apply H0. intuition.
+      - rewrite denoteSymbolicSingleOk.
+        constructor.
+Qed.
+
+Lemma correctArrangementsInIndex : forall (p : list (Z*Z)) (n : nat),
+    correct n p ->
+    (exists p', Permutation p p'
+           /\ Ensembles.In ⟦ bind (nListSpace (range zero (natToInt n)) n)
+                                 (fun xs:list Int => if isLegal (index xs)
+                                                  then single (index xs)
+                                                  else empty) ⟧
+                          (map zTupleToIntTuple p')).
+Proof.
+  intros.
+  exists (ZZSort.sort p).
+  assert (Permutation p (sort p)) by apply Permuted_sort.
+  split; try assumption.
+  rewrite denoteSymbolicBindOk.
+  rewrite bigUnionIsExists.
+  assert (correct n (sort p))
+    by (apply permutationCorrect' with (l1 := p); assumption).
+  exists (map fst (map zTupleToIntTuple (sort p))).
+  split.
+  * unfold correct in H1.
+    destruct H1.
+    destruct H2.
+    unfold allInBounds in H2. unfold inBounds in H2.
+    apply inNListSpaceIfInSpace; try (do 2 (rewrite map_length); assumption).
+    intros.
+    apply in_map_iff in H4.
+    do 2 (destruct H4).
+    apply in_map_iff in H5.
+    do 2 (destruct H5).
+    destruct x. destruct x0.
+    simpl in H5.
+    rewrite <- H4.
+    inversion H5; subst.
+    apply inRangeIfInBounds.
+    apply H2 in H6. destruct H6.
+    assumption.
+  * assert (index (map fst (map zTupleToIntTuple (sort p))) =
+            map zTupleToIntTuple (sort p))
+      by (symmetry; apply sortedIndex with (n := n); assumption).
+    rewrite H2.
+    assert (isLegal (map zTupleToIntTuple (sort p)) = true)
+      by (apply isLegalIffNoCollisions;
+          rewrite intToZInvolutiveMap;
+          unfold correct in H1;
+          destruct H1; destruct H3;
+          assumption).
+    rewrite H3.
+    rewrite denoteSymbolicSingleOk.
+    constructor.
+Qed.
+  
 Theorem solveNQueensComplete : forall (n : nat),
     solveNQueens n = uninhabited -> ~exists l, correct n l.
-Proof. admit. Admitted.
-
-(* We want to show: all valid solutions will be permutations of
- * index (range (stuff)) *)
-
-(* Dealing with boundedness? Hm. Prove that anything index produces
- * will be in bounds? Guess that's the only option *)
-(* Requires reasoning about range *)
-(* Show anything index produces <-> in bounds *)
-
-(* So then we could conclude by showing that we have isLegal (index ...)
-   iff that is a valid assignment, hurrah! *)
+Proof.
+  intros.
+  intro H'.
+  destruct H'.
+  apply correctArrangementsInIndex in H0.
+  do 2 (destruct H0).
+  unfold solveNQueens in H.
+  apply searchUninhabited in H.
+  simpl in *.
+  rewrite H in H1.
+  inversion H1.
+Qed.

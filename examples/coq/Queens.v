@@ -1,7 +1,7 @@
 Require Import Basic.
-Require Import Rosette.Quantified.
+Require Import Heuristic.
+Require Import Full.
 Require Import ListEx.
-Require Import Native.
 Require Import Bool.
 Require Import Arith.EqNat.
 Require Import Integer.
@@ -15,8 +15,24 @@ Require Import Logic.Classical_Prop.
 Require Import Permutation.
 Require Import Coq.Sorting.Mergesort.
 
-Existing Instance rosetteBasic.
-Existing Instance rosetteSearch.
+Module Import ZOrder := OTF_to_TTLB Z.
+Module Import ZSort := Sort ZOrder.
+
+Module ZZOrder <: TotalLeBool.
+  Definition t : Set := (Z*Z).
+  Definition leb (x y : t) : bool := ZOrder.leb (snd x) (snd y).
+  Theorem leb_total : forall (x y : t), leb x y = true \/ leb y x = true.
+    intros. destruct x. destruct y.
+    unfold leb. simpl.
+    apply ZOrder.leb_total.
+  Qed.
+End ZZOrder.
+Module Import ZZSort := Sort ZZOrder.
+
+Section Queens.
+Context `{BAS:Basic}.
+Context `{SEA:@Search BAS}.
+Context `{INT:@Integer BAS}.
 
 Definition elem {A} `{eqDec A} (a:A) : list A -> bool :=
   existsb (fun a' => if a =? a' then true else false).
@@ -60,10 +76,6 @@ Definition solveNQueens (n:nat) : Result (list (Int * Int)).
   refine (let ps := index xs in _).
   refine (if isLegal ps then single ps else empty).
 Defined.
-
-Extraction Language Scheme.
-
-Extraction "queens" solveNQueens.
 
 (* Proofs of completation and soundness for solution *)
 
@@ -560,7 +572,7 @@ Proof.
   induction l; simpl in *.
   * reflexivity.
   * destruct a. unfold uncurry in *. simpl.
-    rewrite <- rosetteDenotePlusOk. simpl.
+    rewrite <- denotePlusOk. simpl.
     rewrite <- IHl. reflexivity.
 Qed.
 
@@ -572,7 +584,7 @@ Proof.
   induction l; simpl in *.
   * reflexivity.
   * destruct a. unfold uncurry in *. simpl.
-    rewrite <- rosetteDenoteMinusOk. simpl.
+    rewrite <- denoteMinusOk. simpl.
     rewrite <- IHl. reflexivity.
 Qed.
 
@@ -635,22 +647,22 @@ Proof.
   * remember (nListSpace s 0) as l'.
     simpl in Heql'.
     rewrite Heql' in H.
-    rewrite denoteSymbolicSingleOk in H.
+    rewrite denoteSingleOk in H.
     inversion H.
     reflexivity.
   * remember (nListSpace s (S n)) as l'.
     simpl in Heql'.
     rewrite Heql' in H.
-    rewrite denoteSymbolicBindOk in H.
+    rewrite denoteBindOk in H.
     rewrite bigUnionIsExists in H.
     inversion H.
     destruct H0.
-    rewrite denoteSymbolicBindOk in H1.
+    rewrite denoteBindOk in H1.
     rewrite bigUnionIsExists in H1.
     destruct H1.
     destruct H1.
     apply IHn in H0.
-    rewrite denoteSymbolicSingleOk in H2.
+    rewrite denoteSingleOk in H2.
     inversion H2.
     simpl.
     rewrite H0.
@@ -662,7 +674,7 @@ Lemma denoteNatToInt : forall (n : nat),
 Proof.
   intros.
   induction n.
-  * simpl. apply rosetteDenoteZeroOk.
+  * simpl. apply denoteZeroOk.
   * rewrite Nat2Z.inj_succ.
     assert (Z.succ (Z.of_nat n) = 1 + Z.of_nat n) by omega.
     rewrite H.
@@ -685,7 +697,7 @@ Proof.
   remember (le zero x && lt x (natToInt n)) as c.
   symmetry in Heqc.
   destruct c.
-  - rewrite denoteSymbolicSingleOk in H1.
+  - rewrite denoteSingleOk in H1.
     inversion H1.
     apply andb_true_iff in Heqc.
     destruct Heqc.
@@ -706,7 +718,7 @@ Proof.
     split; try assumption.
     apply Z_le_lt_eq_dec in H4.
     destruct H4; intuition.
-  - rewrite denoteSymbolicEmptyOk in H1.
+  - rewrite denoteEmptyOk in H1.
     inversion H1.
 Qed.
 
@@ -718,7 +730,7 @@ Proof.
   * remember (nListSpace s 0) as l'.
     simpl in Heql'.
     rewrite Heql' in H.
-    rewrite denoteSymbolicSingleOk in H.
+    rewrite denoteSingleOk in H.
     simpl in H.
     inversion H.
     rewrite <- H1 in H0.
@@ -726,14 +738,14 @@ Proof.
   * remember (nListSpace s (S n)) as l'.
     simpl in Heql'.
     rewrite Heql' in H.
-    rewrite denoteSymbolicBindOk in H.
+    rewrite denoteBindOk in H.
     rewrite bigUnionIsExists in H.
     inversion H.
     destruct H1.
-    rewrite denoteSymbolicBindOk in H2.
+    rewrite denoteBindOk in H2.
     rewrite bigUnionIsExists in H2.
     destruct H2. destruct H2.
-    rewrite denoteSymbolicSingleOk in H3.
+    rewrite denoteSingleOk in H3.
     inversion H3. clear H3.
     rewrite <- H4 in H0.
     inversion H0; subst; intuition.
@@ -783,13 +795,8 @@ Proof.
     rewrite Zpos_P_of_succ_nat.
     omega.
   - apply IHl' in H.
-    rewrite rosetteDenotePlusOk in H.
-    replace (@one rosetteBasic rosetteInteger) with rosetteOne in H;
-      [| reflexivity].
-    rewrite rosetteDenoteOneOk in H.
-    assert (@denote RosetteInt Z rosetteDenotationInt i =
-            @denote (@Int rosetteBasic rosetteInteger) Z
-                    rosetteDenotationInt i) by intuition; subst.
+    rewrite denotePlusOk in H.
+    rewrite denoteOneOk in H.
     assert (1 + Z.of_nat (length l') = Z.of_nat (length (a :: l')))
       by (replace (Z.of_nat (length (a :: l')))
           with (Z.succ (Z.of_nat (length l')));
@@ -804,11 +811,7 @@ Lemma indexBounds {A} : forall (l : list A),
 Proof.
   intros. unfold index in H.
   apply (indexRecBounds l zero p) in H.
-  replace (@denote (@Int rosetteBasic rosetteInteger) Z
-                   rosetteDenotationInt (@zero rosetteBasic rosetteInteger))
-  with (@denote RosetteInt Z rosetteDenotationInt rosetteZero) in H;
-    [| intuition].
-  rewrite rosetteDenoteZeroOk in H.
+  rewrite denoteZeroOk in H.
   replace (Z.of_nat n) with (Z.of_nat (length l)); [| intuition].
   omega.
 Qed.
@@ -879,7 +882,7 @@ Proof.
   remember (isLegal (index x)) as legal.
   symmetry in Heqlegal.
   destruct legal.
-  * rewrite denoteSymbolicSingleOk in H1.
+  * rewrite denoteSingleOk in H1.
     inversion H1.
     apply isLegalIffNoCollisions in Heqlegal.
     split; [| split].
@@ -1000,9 +1003,11 @@ Proof.
   apply H1; assumption.
 Qed.
 
-Definition zToInt (z : Z) : Int. Admitted.
+Definition zToInt := fromZ.
 
-Lemma zToIntOk : forall (z : Z), ⟦ zToInt z ⟧ = z. Admitted.
+Lemma zToIntOk : forall (z : Z), ⟦ zToInt z ⟧ = z.
+  apply denoteFromZOk.
+Qed.
 
 Lemma zToIntZeroOk : zToInt 0 = zero.
   apply denoteInjective.
@@ -1044,20 +1049,6 @@ Qed.
 
 Definition zTupleToIntTuple (p : Z*Z) : (Int*Int) :=
   let '(x, y) := p in (zToInt x, zToInt y).
-
-Module Import ZOrder := OTF_to_TTLB Z.
-Module Import ZSort := Sort ZOrder.
-
-Module ZZOrder <: TotalLeBool.
-  Definition t : Set := (Z*Z).
-  Definition leb (x y : t) : bool := ZOrder.leb (snd x) (snd y).
-  Theorem leb_total : forall (x y : t), leb x y = true \/ leb y x = true.
-    intros. destruct x. destruct y.
-    unfold leb. simpl.
-    apply ZOrder.leb_total.
-  Qed.
-End ZZOrder.
-Module Import ZZSort := Sort ZZOrder.
 
 Lemma indexPreservesFst {A} : forall (l : list A), (map fst (index l)) = l.
   unfold index.
@@ -1193,12 +1184,8 @@ Proof.
   intro n. induction n; intros.
   * reflexivity.
   * unfold countUp. rewrite IHn. unfold zCountUp.
-    rewrite rosetteDenotePlusOk.
-    replace (@denote RosetteInt Z rosetteDenotationInt
-                     (@one rosetteBasic rosetteInteger))
-    with (@denote RosetteInt Z rosetteDenotationInt rosetteOne);
-      [| intuition].
-    rewrite rosetteDenoteOneOk. simpl.
+    rewrite denotePlusOk.
+    rewrite denoteOneOk. simpl.
     rewrite zToIntInv.
     reflexivity.
 Qed.
@@ -1313,11 +1300,7 @@ Proof.
     apply Permutation_length. apply Permutation_sym.
     assumption.
   * rewrite intSndToZSnd. rewrite countUpToZCountUp. rewrite zToIntMapBij.
-    replace (@denote (@Int rosetteBasic rosetteInteger) Z rosetteDenotationInt
-                     (@zero rosetteBasic rosetteInteger))
-    with (@denote RosetteInt Z rosetteDenotationInt rosetteZero);
-      [| intuition].
-    rewrite rosetteDenoteZeroOk.
+    rewrite denoteZeroOk.
     destruct H2. destruct H3.
     assert (Sorted.LocallySorted
               (fun p1 p2 => is_true (leb (snd p1) (snd p2))) (sort p))
@@ -1361,7 +1344,7 @@ Proof.
     + destruct H. apply Z.leb_le. assumption.
     + apply Z.leb_le. omega.
     + apply negb_true_iff. apply Z.eqb_neq. omega.
-    + rewrite H0. rewrite denoteSymbolicSingleOk.
+    + rewrite H0. rewrite denoteSingleOk.
       constructor.
 Qed.
 
@@ -1380,24 +1363,24 @@ Lemma inNListSpaceIfInSpace {A} : forall (l : list A) (s : Space A) (n : nat),
 Proof.
   intro l. induction l; intros.
   * simpl in H. rewrite <- H.
-    unfold nListSpace. rewrite denoteSymbolicSingleOk.
+    unfold nListSpace. rewrite denoteSingleOk.
     simpl. constructor.
   * simpl in H.
     destruct n; inversion H.
     unfold nListSpace.
-    rewrite denoteSymbolicBindOk.
+    rewrite denoteBindOk.
     rewrite bigUnionIsExists.
     assert (forall a0 : A, In a0 l -> Ensembles.In ⟦ s ⟧ a0)
       by (intros; apply H0; simpl; right; assumption).
     exists l.
     split.
     + apply IHl; intuition.
-    + rewrite denoteSymbolicBindOk.
+    + rewrite denoteBindOk.
       rewrite bigUnionIsExists.
       exists a.
       split.
       - apply H0. intuition.
-      - rewrite denoteSymbolicSingleOk.
+      - rewrite denoteSingleOk.
         constructor.
 Qed.
 
@@ -1414,7 +1397,7 @@ Proof.
   exists (ZZSort.sort p).
   assert (Permutation p (sort p)) by apply Permuted_sort.
   split; try assumption.
-  rewrite denoteSymbolicBindOk.
+  rewrite denoteBindOk.
   rewrite bigUnionIsExists.
   assert (correct n (sort p))
     by (apply permutationCorrect' with (l1 := p); assumption).
@@ -1448,7 +1431,7 @@ Proof.
           destruct H1; destruct H3;
           assumption).
     rewrite H3.
-    rewrite denoteSymbolicSingleOk.
+    rewrite denoteSingleOk.
     constructor.
 Qed.
   
@@ -1466,3 +1449,32 @@ Proof.
   rewrite H in H1.
   inversion H1.
 Qed.
+
+Definition solver {A} (P : A -> Prop) := {a | P a} + {~exists a, P a}.
+
+Definition solveNQueensDep n : option (solver (correct n)).
+  destruct (solveNQueens n) as [l| | ] eqn:eq.
+  - (* solution *)
+    refine (Some _).
+    left.
+    exists (map denoteIntTuple l).
+    apply solveNQueensSound.
+    assumption.
+  - (* unihabited *)
+    refine (Some _).
+    right.
+    apply solveNQueensComplete.
+    assumption.
+  - (* unknown, this should never happen, because we only deal with
+    integers in finite ranges *)
+    refine None.
+Defined.    
+
+End Queens.
+
+Require Import Rosette.Quantified.
+
+Definition solveNQueensRosette := solveNQueensDep.
+
+Extraction Language Scheme.
+Extraction "queens" solveNQueensRosette.

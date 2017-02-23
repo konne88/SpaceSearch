@@ -58,18 +58,14 @@ Proof.
 Defined.
 
 Parameter RosetteInt   : Type.
-Parameter rosetteMone  : RosetteInt.
-Parameter rosetteZero  : RosetteInt.
-Parameter rosetteOne   : RosetteInt.
+Parameter rosetteFromZ  : Z -> RosetteInt.
 Parameter rosettePlus  : RosetteInt -> RosetteInt -> RosetteInt.
 Parameter rosetteMinus : RosetteInt -> RosetteInt -> RosetteInt.
 Parameter rosetteEqual : RosetteInt -> RosetteInt -> bool.
 Parameter rosetteLe    : RosetteInt -> RosetteInt -> bool.
 
 Extract Constant RosetteInt   => "__".
-Extract Constant rosetteMone  => "-1".
-Extract Constant rosetteZero  => "0".
-Extract Constant rosetteOne   => "1".
+Extract Constant rosetteFromZ  => "z->number".
 Extract Constant rosettePlus  => "(lambdas (n m) (+ n m))".
 Extract Constant rosetteMinus  => "(lambdas (n m) (- n m))".
 Extract Constant rosetteEqual => "(lambdas (n m) (if (= n m) '(True) '(False)))".
@@ -82,9 +78,7 @@ Global Instance rosetteDenotationInt : Denotation _ _ := {|
   denote := rosetteDenoteInt
 |}.
 
-Axiom rosetteDenoteMoneOk : ⟦rosetteMone⟧ = -1.
-Axiom rosetteDenoteZeroOk : ⟦rosetteZero⟧ = 0.
-Axiom rosetteDenoteOneOk : ⟦rosetteOne⟧ = 1.
+Axiom rosetteDenoteFromZOk : forall z, ⟦rosetteFromZ z⟧ = z.
 Axiom rosetteDenotePlusOk : forall n m, ⟦rosettePlus n m⟧ = ⟦n⟧ + ⟦m⟧.
 Axiom rosetteDenoteMinusOk : forall n m, ⟦rosetteMinus n m⟧ = ⟦n⟧ - ⟦m⟧.
 Axiom rosetteDenoteEqualOk : forall n m, rosetteEqual n m = (⟦ n ⟧ =? ⟦ m ⟧).
@@ -104,16 +98,12 @@ Global Instance fullRosetteInteger : @Full rosetteBasic RosetteInt := {|
 
 Global Instance rosetteInteger : @Integer rosetteBasic := {| 
   Int := RosetteInt;
-  mone := rosetteMone;
-  zero := rosetteZero;
-  one := rosetteOne;
+  fromZ := rosetteFromZ;
   plus := rosettePlus;
   minus := rosetteMinus;
   equal := rosetteEqual;
   le := rosetteLe;
-  denoteMoneOk := rosetteDenoteMoneOk;
-  denoteZeroOk := rosetteDenoteZeroOk;
-  denoteOneOk := rosetteDenoteOneOk;
+  denoteFromZOk := rosetteDenoteFromZOk;
   denotePlusOk := rosetteDenotePlusOk;
   denoteMinusOk := rosetteDenoteMinusOk;
   denoteEqualOk := rosetteDenoteEqualOk;

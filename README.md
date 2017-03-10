@@ -31,6 +31,10 @@ all the right dependencies setup:
 
     docker rm -f ss; docker run --name ss --entrypoint /bin/bash -v $(pwd):/ss -ti ss
 
+If you like the `fish` shell (i do) run:
+
+    docker rm -f ss; docker run --name ss --entrypoint /usr/bin/fish -v (pwd):/ss -ti ss
+
 Running the above command starts a shell in the development environment. You can
 build the SpaceSearch project with:
 

@@ -8,7 +8,10 @@ EXA_RKT=examples/racket
 
 build: 
 	cd $(SRC_COQ); find . -name '*.v' -exec coq_makefile -R . "SpaceSearch" -o Makefile {} +
-	make -j4 -C$(SRC_COQ)
+	make -C$(SRC_COQ)
+
+install: build
+	make -C$(SRC_COQ) install
 
 examples: build
 	cd $(EXA_COQ); find . -name '*.v' -exec coq_makefile -R ../../${SRC_COQ} "SpaceSearch" -o Makefile {} +
@@ -43,7 +46,7 @@ examples: build
 clean:
 	find . \( \
           -name "*.glob" -o \
-	  -name "*.v.d" -o \
+          -name "*.v.d" -o \
           -name "*.scm" -o \
           -name "*.vo" -o \
           -name ".*.aux" -o \

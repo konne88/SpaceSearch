@@ -1,59 +1,25 @@
 FROM ubuntu:14.04.2
 MAINTAINER Konstantin Weitz <konstantin.weitz@gmail.com>
 
+# install basic tools
 RUN apt-get update && \
     apt-get install -y \
       binutils \
-      camlp5 \
       curl \
-      default-jre \
-      emacs24-nox \
+      fish \
       git \
       g++ \
-      haskell-platform \
-      libpcre-ocaml-dev \
-      libpcre3-dev \
-      libreadline-dev \
-      libz-dev \
       make \
-      pkg-config \
       python \
       python-pip \
-      python-yaml \
       vim \
+      unzip \
       wget
 
 # install z3
 RUN git clone https://github.com/Z3Prover/z3.git && \
     cd z3; python scripts/mk_make.py && \
            cd build; make; make install
-
-# install smten
-ENV PATH ~/.cabal/bin:$PATH
-RUN mkdir smten && cd smten && \
-    cabal update && \
-    wget https://github.com/ruhler/smten/releases/download/v4.1.0.0/smten-4.1.0.0.tar.gz && \
-    wget https://github.com/ruhler/smten/releases/download/v4.1.0.0/smten-base-4.1.0.0.tar.gz && \
-    wget https://github.com/ruhler/smten/releases/download/v4.1.0.0/smten-lib-4.1.0.0.tar.gz && \
-    wget https://github.com/ruhler/smten/releases/download/v4.1.0.0/smten-minisat-4.1.0.0.tar.gz && \
-    tar -xf smten-4.1.0.0.tar.gz && cd smten-4.1.0.0 && cabal install && cd - && \
-    tar -xf smten-base-4.1.0.0.tar.gz && cd smten-base-4.1.0.0 && cabal install && cd - && \
-    tar -xf smten-lib-4.1.0.0.tar.gz && cd smten-lib-4.1.0.0 && cabal install && cd - && \
-    tar -xf smten-minisat-4.1.0.0.tar.gz && cd smten-minisat-4.1.0.0 && cabal install && cd -
-
-# install coq
-RUN wget https://coq.inria.fr/distrib/V8.5pl2/files/coq-8.5pl2.tar.gz -O coq.tar.gz && \
-    tar -xvf coq.tar.gz && \
-    cd coq*; ./configure \
-              -bindir /usr/local/bin \
-              -libdir /usr/local/lib/coq \
-              -configdir /etc/xdg/coq \
-              -datadir /usr/local/share/coq \
-              -mandir /usr/local/share/man \
-              -docdir /usr/local/share/doc/coq \
-              -emacs /usr/local/share/emacs/site-lisp \
-              -coqdocdir /usr/local/share/texmf/tex/latex/misc && \
-            make -j4; make install
 
 # install racket
 RUN wget http://mirror.racket-lang.org/installers/6.6/racket-6.6-x86_64-linux.sh -O install.sh && \
@@ -62,30 +28,22 @@ RUN wget http://mirror.racket-lang.org/installers/6.6/racket-6.6-x86_64-linux.sh
     rm install.sh
 
 # install rosette
-RUN git clone https://github.com/emina/rosette.git && \
+RUN apt-get update && \
+    apt-get install -y \
+      libcairo2-dev \
+      libpango1.0-dev \
+      libjpeg-dev && \
+    git clone https://github.com/emina/rosette.git && \
     cd rosette; git checkout 2.2 && \
                 raco pkg install
 
-# install sshd
-RUN apt-get update; \
-    apt-get install -y \
-      openssh-server
-RUN ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa && \
-    cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys && \
-    echo 'Host *' >> /root/.ssh/config && \
-    echo '    StrictHostKeyChecking no' >> /root/.ssh/config && \
-    echo '    Port 2222' >> /root/.ssh/config && \
-    sed -i.bak 's/Port 22/Port 2222/' /etc/ssh/sshd_config
+# install opam
+RUN wget https://raw.github.com/ocaml/opam/master/shell/opam_installer.sh -O - | sh -s /usr/local/bin && \
+    opam init -n --comp=4.01.0
+ENV PATH "/root/.opam/4.01.0/bin":$PATH
 
-EXPOSE 2222
-EXPOSE 1234-1298
-
-# enable rosette debugging
-RUN cd rosette && \
-#   sed -i "s/;(printf/(printf/g" rosette/base/core/effects.rkt && \
-#   sed -i "s/;(fprintf/(fprintf/g" rosette/solver/smt/smtlib2.rkt && \
-    raco pkg remove rosette && \
-    raco pkg install
+# install coq
+RUN opam install coq.8.5.2
 
 # build SpaceSearch and examples
 ADD . /ss

@@ -3,6 +3,8 @@ name: "space-search"
 version: "0.9"
 maintainer: "Konstantin Weitz <konstantin.weitz@gmail.com>"
 homepage: "https://github.com/konne88/SpaceSearch"
+dev-repo: "https://github.com/konne88/SpaceSearch.git"
+bug-reports: "https://github.com/konne88/SpaceSearch/issues"
 build: [
   [make]
 ]

@@ -308,8 +308,8 @@ Proof.
     * rewrite IHs; intuition.
 Qed.
 
-Theorem bindMinus {A} `{eqDec A} : forall s' s f,
-    ⟦ bind s f ⟧ = Empty_set A -> bind (minus s' s) f = bind s' f.
+Theorem bindMinus {A B} `{eqDec A} : forall (s' s : Space A) (f : A -> Space B),
+    ⟦ bind s f ⟧ = Empty_set B -> bind (minus s' s) f = bind s' f.
 Proof.
   unfold minus. unfold listMinus. unfold bind. simpl.
   intros.
@@ -343,9 +343,9 @@ simple refine {|
 - intros. apply searchUninhabited. apply H0.
 Defined.
 
-Corollary incSearchEquiv {A} `{eqDec A} :
-  forall (s' s : Space A) (f : A -> Space A),
-    ⟦ bind s f ⟧ = Empty_set A -> incSearch s' s f = search (bind s' f).
+Corollary incSearchEquiv {A B} `{eqDec A} :
+  forall (s' s : Space A) (f : A -> Space B),
+    ⟦ bind s f ⟧ = Empty_set B -> incSearch s' s f = search (bind s' f).
 Proof.
   intros.
   unfold incSearch. unfold listIncSearch. unfold search. unfold listSearch.

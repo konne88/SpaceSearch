@@ -75,6 +75,23 @@ Section Definitions.
   Definition lt (n m:Int) : bool := 
     andb (le n m) (negb (equal n m)).
 
+  Lemma denoteLtOk n m : lt n m = (⟦ n ⟧ <? ⟦ m ⟧).
+  Proof.
+    unfold lt.
+    rewrite denoteLeOk.
+    apply Bool.eq_true_iff_eq.
+    rewrite Bool.andb_true_iff, Bool.negb_true_iff.
+    rewrite denoteEqualOk.
+    rewrite Z.leb_le, Z.eqb_neq, Z.ltb_lt.
+    omega.
+  Qed.
+
+  Lemma fromZInv : forall (i : Int), fromZ ⟦ i ⟧ = i.
+    intros.
+    apply denoteInjective.
+    now rewrite denoteFromZOk.
+  Qed.
+
   (* { v | n <= v < m } *)
   Definition range (n m:Int) : Space Int.
     refine (bind full (fun v : Int => _)).

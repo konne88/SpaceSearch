@@ -119,3 +119,14 @@ Section Definitions.
   Qed.
 End Definitions.
 
+Module IntegerNotations.
+  Delimit Scope int with int.
+  Bind Scope int with Int.
+
+  Infix "+"   := plus   : int.
+  Infix "-"   := minus  : int.
+  Infix "<=?" := le     : int.
+  Infix "<?"  := lt     : int.
+
+  Open Scope int.
+End IntegerNotations.

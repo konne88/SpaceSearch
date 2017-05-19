@@ -85,3 +85,19 @@ Proof.
   invc H0.
   f_equal; auto.
 Qed.
+
+Definition tabulate {A} (f : A -> A) :=
+  fix rec (n : nat) (acc : A) : list A :=
+    match n with
+    | 0 => []
+    | S n => acc :: rec n (f acc)
+    end.
+
+Lemma tabulate_map :
+  forall A B fA fB (g : A -> B),
+    (forall b, fA (g b) = g (fB b)) ->
+    forall n a b, a = g b -> tabulate fA n a = List.map g (tabulate fB n b).
+Proof.
+  induction n; simpl; intros; auto.
+  f_equal; auto. apply IHn. congruence.
+Qed.

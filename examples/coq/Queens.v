@@ -674,12 +674,6 @@ Proof.
   apply indexPreservesFst'.
 Qed.
 
-Fixpoint countUp (n : nat) (start : Int) : list Int :=
-  match n with
-  | S n' => start :: countUp n' (plus one start)
-  | O => []
-  end.
-
 Lemma sndIndexCountsUp' {A} : forall (l : list A) (i : Int),
     map snd (index' i l) = countUp (length l) i.
 Proof.
@@ -762,22 +756,6 @@ Proof.
   * congruence.
 Qed.
 
-Fixpoint zCountUp (n : nat) (start : Z) : list Z :=
-  match n with
-  | S n' => start :: zCountUp n' (1 + start)
-  | O => []
-  end.
-
-Lemma countUpToZCountUp : forall (n : nat) (start : Int),
-    countUp n start = map zToInt (zCountUp n ⟦ start ⟧).
-Proof.
-  intro n. induction n; intros.
-  * reflexivity.
-  * cbn [countUp zCountUp map].
-    rewrite IHn.
-    space_crush.
-Qed.
-
 Lemma sortedBySecond : forall (l : list (Z*Z)),
     Sorted.LocallySorted (fun p1 p2 => is_true (leb (snd p1) (snd p2))) l
     -> Sorted.LocallySorted (fun z1 z2 => is_true (leb z1 z2)) (map snd l).
@@ -818,12 +796,13 @@ Proof.
       lia.
     }
     specialize (IHStronglySorted (length l) (1 + i) eq_refl ltac:(auto) Range').
+    change (zCountUp _ _) with (i :: zCountUp (length l) (1 + i)).
     rewrite <- IHStronglySorted.
 
     f_equal.
     destruct l as [|b l].
     + specialize (Range _ (or_introl eq_refl)). simpl in Range. omega.
-    + assert (b = 1 + i) by (cbn [length zCountUp] in IHStronglySorted; congruence).
+    + assert (b = 1 + i) by (cbn [length zCountUp tabulate] in IHStronglySorted; congruence).
       assert (a < b) by intuition.
       omega.
 Qed.

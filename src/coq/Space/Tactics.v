@@ -42,11 +42,11 @@ Ltac break_space :=
   repeat
     match goal with
     | [ H : Ensembles.In (fun _ => exists _, _ /\ _) _ |- _ ] => destruct H as (? & ? & ?)
-    | [ H : Ensembles.In (fun _ => Singleton _ _ _) _ |- _ ] => inversion H; clear H; subst
-    | [ H : Ensembles.In (fun _ => Empty_set _ _) _ |- _ ] => inversion H
+    | [ H : Ensembles.In (Singleton _ _) _ |- _ ] => invc H
+    | [ H : Ensembles.In (Empty_set _) _ |- _ ] => invc H
     | [ H : exists _, _ /\ _ |- _ ] => destruct H as (? & ? & ?)
-    | [ H : Singleton _ _ _ |- _ ] => inversion H; clear H; subst
-    | [ H : Empty_set _ _ |- _ ] => inversion H
+    | [ H : Singleton _ _ _ |- _ ] => invc H
+    | [ H : Empty_set _ _ |- _ ] => invc H
     end.
 
 (* The main SpaceSearch workhorse tactic. Repeatedly rewrite by denotation

@@ -1,6 +1,7 @@
 Require Import EnsemblesEx.
 Require Import Denotation.
 Require Import Basics.
+Require Import BasicTactics.
 
 Export EnsemblesEx.
 Export Denotation.
@@ -23,3 +24,15 @@ Class Basic := {
 }.
 
 Definition map `{S:Basic} {A B} (f:A->B) s := bind s (single ∘ f).
+
+Definition guard `{Basic}{A} (p : A -> bool) (a : A) : Space A :=
+  if p a then single a else empty.
+
+Lemma denoteGuardOk : forall `{Basic} A (p : A -> bool) (a : A),
+    denote (guard p a) = if p a then denote (single a) else denote empty.
+Proof.
+  unfold guard.
+  intros.
+  break_if; auto.
+Qed.
+

@@ -8,7 +8,7 @@ Require Export BasicTactics.
 (* Add all the denotation lemmas to a rewrite database. As SpaceSearch expands,
    any new denotation lemmas should be added to the database. *)
 Hint Rewrite @denoteEmptyOk @denoteSingleOk @denoteBindOk @bigUnionIsExists : space.
-Hint Rewrite @denoteFullOk : space.
+Hint Rewrite @denoteFullOk @denoteGuardOk : space.
 Hint Rewrite @denoteZeroOk @denoteOneOk @denotePlusOk @denoteLeOk @denoteEqualOk : space.
 Hint Rewrite @denoteLtOk @denoteFromZOk @denoteMinusOk @fromZInv : space.
 

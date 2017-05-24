@@ -68,7 +68,7 @@ Definition solveNQueens (n:nat) : Result (list (Int * Int)).
     (bind (nListSpace (range zero (natToInt n)) n)
       (fun xs:list Int => _))).
   refine (let ps := index xs in _).
-  refine (if isLegal ps then single ps else empty).
+  refine (guard isLegal ps).
 Defined.
 
 (* Proofs of completation and soundness for solution *)
@@ -889,9 +889,7 @@ Lemma correctArrangementsInIndex : forall (p : list (Z*Z)) (n : nat),
     correct n p ->
     (exists p', Permutation p p'
            /\ Ensembles.In ⟦ bind (nListSpace (range zero (natToInt n)) n)
-                                 (fun xs:list Int => if isLegal (index xs)
-                                                  then single (index xs)
-                                                  else empty) ⟧
+                                 (fun xs:list Int => guard isLegal (index xs)) ⟧
                           (map zTupleToIntTuple p')).
 Proof.
   intros.
@@ -916,6 +914,7 @@ Proof.
     destruct Hin.
     assumption.
   * erewrite <- sortedIndex by eauto.
+    space_crush.
     rewrite (proj2 (isLegalIffNoCollisions _))
       by (rewrite intToZInvolutiveMap; unfold correct in *; intuition).
     space_crush.

@@ -49,6 +49,12 @@ Ltac break_space :=
     | [ H : Empty_set _ _ |- _ ] => invc H
     end.
 
+Ltac break_and :=
+  repeat
+    match goal with
+    | [ H : _ /\ _ |- _ ] => destruct H
+    end.
+
 (* The main SpaceSearch workhorse tactic. Repeatedly rewrite by denotation
    lemmas, destruct their results, and convert booleans to Props. Finally,
    cleanup by trying a few basic Ensemble constructors. *)
@@ -57,5 +63,5 @@ Ltac space_crush :=
   repeat
     (autorewrite with list space in *;
      break_space;
-     do_bool);
+     do_bool; break_and);
   auto with space.

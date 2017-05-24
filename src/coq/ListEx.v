@@ -53,6 +53,7 @@ Proof.
   induction l; simpl; intros.
   - constructor.
   - do_bool.
+    intuition.
     constructor; auto.
     rewrite <- elem_In with (H := H).
     congruence.

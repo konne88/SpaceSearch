@@ -23,18 +23,17 @@ Ltac break_match :=
   | [ |- context [match ?X with _ => _ end] ] => destruct X eqn:?
   end.
 
+Lemma implb_true_iff : forall b1 b2,
+      implb b1 b2 = true <->
+      (b1 = true -> b2 =true).
+Proof.
+  destruct b1, b2; simpl; intuition congruence.
+Qed.
+
+Hint Rewrite andb_true_iff orb_true_iff negb_true_iff implb_true_iff : bool.
+Hint Rewrite andb_false_iff orb_false_iff negb_false_iff : bool.
+Hint Rewrite Z.leb_le Z.ltb_lt : bool.
+
 (* Convert various boolean things to Propositional things, eg && becomes /\, etc. *)
 Ltac do_bool :=
-  repeat
-    match goal with
-    | [ H : _ && _ = true |- _ ] => apply andb_true_iff in H; destruct H
-    | [ H : _ || _ = false |- _ ] => apply orb_false_iff in H; destruct H
-    | [ H : negb _ = true |- _ ] => apply negb_true_iff in H
-    | [ H : context [(_ <=? _) = true] |- _ ] => rewrite Z.leb_le in H
-    | [ H : context [(_ <? _) = true] |- _ ] => rewrite Z.ltb_lt in H
-    | [ |- context [_ && _ = true] ] => rewrite andb_true_iff
-    | [ |- context [_ || _ = false] ] => rewrite orb_false_iff
-    | [ |- context [negb _ = true] ] => rewrite negb_true_iff
-    | [ |- context [(_ <=? _) = true] ] => rewrite Z.leb_le
-    | [ |- context [(_ <? _) = true] ] => rewrite Z.ltb_lt
-    end.
+  autorewrite with bool in *.

@@ -5,8 +5,16 @@ Arguments In {_} / _ _.
 Arguments Same_set / {_} _ _.
 Arguments Included / {_} _ _.
 
+Module EnsembleNotations.
+  Delimit Scope ensemble with ensemble.
+  Bind Scope ensemble with Ensemble.
+  Notation "x ∈ E" := (Ensembles.In E x) (at level 42) : ensemble.
+  Open Scope ensemble.
+End EnsembleNotations.
+Import EnsembleNotations.
+
 Inductive BigUnion A B (s:Ensemble A) (f:A -> Ensemble B) : Ensemble B :=
-| bigUnion a b : In s a -> In (f a) b -> In (BigUnion A B s f) b.
+| bigUnion a b : a ∈ s -> b ∈ f a -> b ∈ BigUnion A B s f.
 
 Lemma singletonIsEqual {A a} : Singleton A a = (fun a' => a = a').
   apply Extensionality_Ensembles.

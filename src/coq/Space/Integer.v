@@ -2,6 +2,7 @@ Require Import Basic.
 Require Import Full.
 Require Import ZArith.
 Require Import EqDec.
+Require ListEx.
 
 Export ZArith.
 
@@ -98,5 +99,34 @@ Section Definitions.
     refine (if (andb (le n v) (lt v m))
             then single v else empty).
   Defined.
+
+  Definition countUp (n : nat) (start : Int) : list Int :=
+    ListEx.tabulate (plus one) n start.
+
+  Definition zCountUp (n : nat) (start : Z) : list Z :=
+    ListEx.tabulate (Z.add 1) n start.
+
+  Lemma countUpToZCountUp : forall (n : nat) (start : Int),
+      countUp n start = List.map fromZ (zCountUp n ⟦ start ⟧).
+  Proof.
+    intros.
+    unfold countUp, zCountUp.
+    apply ListEx.tabulate_map.
+    intros.
+    - apply denoteInjective.
+      now rewrite denotePlusOk, denoteOneOk, !denoteFromZOk.
+    - now rewrite fromZInv.
+  Qed.
 End Definitions.
 
+Module IntegerNotations.
+  Delimit Scope int with int.
+  Bind Scope int with Int.
+
+  Infix "+"   := plus   : int.
+  Infix "-"   := minus  : int.
+  Infix "<=?" := le     : int.
+  Infix "<?"  := lt     : int.
+
+  Open Scope int.
+End IntegerNotations.

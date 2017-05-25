@@ -8,7 +8,7 @@ Require Export BasicTactics.
 (* Add all the denotation lemmas to a rewrite database. As SpaceSearch expands,
    any new denotation lemmas should be added to the database. *)
 Hint Rewrite @denoteEmptyOk @denoteSingleOk @denoteBindOk @bigUnionIsExists : space.
-Hint Rewrite @denoteFullOk : space.
+Hint Rewrite @denoteFullOk @denoteGuardOk : space.
 Hint Rewrite @denoteZeroOk @denoteOneOk @denotePlusOk @denoteLeOk @denoteEqualOk : space.
 Hint Rewrite @denoteLtOk @denoteFromZOk @denoteMinusOk @fromZInv : space.
 
@@ -42,11 +42,17 @@ Ltac break_space :=
   repeat
     match goal with
     | [ H : Ensembles.In (fun _ => exists _, _ /\ _) _ |- _ ] => destruct H as (? & ? & ?)
-    | [ H : Ensembles.In (fun _ => Singleton _ _ _) _ |- _ ] => inversion H; clear H; subst
-    | [ H : Ensembles.In (fun _ => Empty_set _ _) _ |- _ ] => inversion H
+    | [ H : Ensembles.In (Singleton _ _) _ |- _ ] => invc H
+    | [ H : Ensembles.In (Empty_set _) _ |- _ ] => invc H
     | [ H : exists _, _ /\ _ |- _ ] => destruct H as (? & ? & ?)
-    | [ H : Singleton _ _ _ |- _ ] => inversion H; clear H; subst
-    | [ H : Empty_set _ _ |- _ ] => inversion H
+    | [ H : Singleton _ _ _ |- _ ] => invc H
+    | [ H : Empty_set _ _ |- _ ] => invc H
+    end.
+
+Ltac break_and :=
+  repeat
+    match goal with
+    | [ H : _ /\ _ |- _ ] => destruct H
     end.
 
 (* The main SpaceSearch workhorse tactic. Repeatedly rewrite by denotation
@@ -57,5 +63,5 @@ Ltac space_crush :=
   repeat
     (autorewrite with list space in *;
      break_space;
-     do_bool);
+     do_bool; break_and);
   auto with space.

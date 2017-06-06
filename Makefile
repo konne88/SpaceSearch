@@ -39,6 +39,18 @@ examples: build
 	cp $(EXA_RKT)/header.rkt primes-incremental.rkt
 	tail -n +4 $(EXA_COQ)/primes-incremental.scm >> primes-incremental.rkt
 	cat $(EXA_RKT)/primes-incremental.rkt >> primes-incremental.rkt
+	# game player
+	cp $(EXA_RKT)/header.rkt ticTacToe.rkt
+	tail -n +4 $(EXA_COQ)/ticTacToe.scm >> ticTacToe.rkt
+	cat $(EXA_RKT)/ticTacToe.rkt >> ticTacToe.rkt
+
+	cp $(EXA_RKT)/header.rkt chess.rkt
+	tail -n +4 $(EXA_COQ)/chess.scm >> chess.rkt
+	cat $(EXA_RKT)/chess.rkt >> chess.rkt
+
+	cp $(EXA_RKT)/header.rkt connectFour.rkt
+	tail -n +4 $(EXA_COQ)/connectFour.scm >> connectFour.rkt
+	cat $(EXA_RKT)/connectFour.rkt >> connectFour.rkt
 	# build examples, and make them executable
 	raco make *.rkt
 	chmod +x *.rkt

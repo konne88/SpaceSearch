@@ -16,3 +16,6 @@ src/racket/worker.rkt
 /primes-naive.rkt
 /primes-incremental.rkt
 /primes-bind.rkt
+/chess.rkt
+/connectFour.rkt
+/ticTacToe.rkt

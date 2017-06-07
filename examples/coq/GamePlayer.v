@@ -496,7 +496,8 @@ Module ChessRules : GameRules.
   Inductive color := White | Black.
 
   Instance colorEq : eqDec color.
-    constructor. decide equality.
+
+  constructor. decide equality.
   Defined.
 
   Instance pieceEq : eqDec piece.
@@ -896,22 +897,15 @@ Module ConnectFourRules : GameRules.
     : list (option color) :=
     match col with
     | [] => col (* should not happen *)
-    | h :: t =>
-      match h with
-      | Some c' => col (* should not happen *)
-      | None =>
-        match t with
-        | [] => [Some c] (* end of the column, we're done *)
-        | h' :: t' =>
-        (* do we have room to fall more? *)
-          match h' with
-          | Some c' => Some c :: h' :: t (* no *)
-          | None => h' :: dropCol c t (* fall more with lookahead *)
-          end
-        end
+    | None :: t =>
+      match t with
+      | [] => [Some c] (* end of column *)
+      | None :: t' => None :: dropCol c t (* can fall more *)
+      | Some _ :: _ => Some c :: t (* cannot fall more *)
       end
+    | Some _ :: _ => col (* should not happen *)
     end.
-
+             
   Fixpoint replaceCol (b : board) (col : list (option color)) (y : nat)
     : board :=
     match b with
@@ -1052,7 +1046,7 @@ Module ConnectFourRules : GameRules.
     else
       (* otherwise you can drop a piece down any open column *)
       let allCols := countUp num_cols in
-      filter (fun c => colOpen (nth c b [])) allCols.
+      filter (fun c => colOpen (nth c b [])) allCols.  
 End ConnectFourRules.
 
 Module TicTacToePlayer := GamePlayer(TicTacToeRules).

@@ -823,11 +823,8 @@ Module ChessRules : GameRules.
              let reachable := reachableSquares b p in
              map (fun s => (p', (x, y), s)) reachable ++ acc)
           [] pieces in
-    (* if the player is in check, then the only legal moves are those
-     * which take the player out of check *)
-    if inCheck s c
-    then filter (fun m => negb (inCheck (execute_move s m) c)) allMoves
-    else allMoves.
+    (* the player is never allowed to make a move that leaves them in check *)
+    filter (fun m => negb (inCheck (execute_move s m) c)) allMoves.
 
   (* white wins if black is in check and has no legal moves *)
   Definition win_state (s : state) : Prop :=
